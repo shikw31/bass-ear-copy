@@ -1,6 +1,6 @@
-import type { Session } from "../domain/types";
+import type { Session, SongWorkspaceState } from "../domain/types";
 import { getCurrentSession } from "../api/authClient";
-import { fetchSongData, saveSongData } from "../api/syncClient";
+import { ConflictError, fetchSongData, saveSongData } from "../api/syncClient";
 import { loadSongState, saveSongState } from "../logic/localStorageAdapter";
 import { mergeLastWriteWins } from "../logic/mergeLastWriteWins";
 import { nextBackoffDelayMs, RetryQueueManager } from "../logic/retryQueueManager";
@@ -51,7 +51,15 @@ export class SyncOrchestrationService {
       this.retryQueue.dequeue(state.songKey);
       this.backoffMs = 0;
       return "synced";
-    } catch {
+    } catch (error) {
+      if (error instanceof ConflictError) {
+        // Server already holds a newer record (backend-enforced Last-Write-Wins — see
+        // backend-sync-api/functional-design/business-logic-model.md section 6). Our write can
+        // never succeed by retrying, so adopt the server's state instead of queuing forever.
+        this.adoptServerState(workspace, error.existing);
+        this.retryQueue.dequeue(state.songKey);
+        return "synced";
+      }
       this.retryQueue.enqueue(state);
       this.scheduleFlush();
       return "sync-pending";
@@ -68,8 +76,14 @@ export class SyncOrchestrationService {
       try {
         await saveSongData(entry.state);
         this.retryQueue.dequeue(entry.songKey);
-      } catch {
-        anyFailed = true;
+      } catch (error) {
+        if (error instanceof ConflictError) {
+          const merged = mergeLastWriteWins(entry.state, error.existing);
+          if (merged) saveSongState(merged);
+          this.retryQueue.dequeue(entry.songKey);
+        } else {
+          anyFailed = true;
+        }
       }
     }
 
@@ -87,6 +101,13 @@ export class SyncOrchestrationService {
       this.flushTimeoutHandle = null;
       void this.flushQueue();
     }, this.backoffMs);
+  }
+
+  private adoptServerState(workspace: SongWorkspace, serverState: SongWorkspaceState): void {
+    const merged = mergeLastWriteWins(workspace.exportState(), serverState);
+    if (!merged) return;
+    saveSongState(merged);
+    workspace.importState(merged);
   }
 
   private async safeGetSession(): Promise<Session | null> {

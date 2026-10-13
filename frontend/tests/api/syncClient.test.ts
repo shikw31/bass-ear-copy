@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SongWorkspaceState } from "../../src/domain/types";
-import { fetchSongData, saveSongData } from "../../src/api/syncClient";
+import { ConflictError, fetchSongData, saveSongData } from "../../src/api/syncClient";
 
 const sampleState: SongWorkspaceState = {
   songKey: "local:abc",
@@ -43,7 +43,22 @@ describe("syncClient", () => {
   });
 
   it("saveSongData throws on failure", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
     await expect(saveSongData(sampleState)).rejects.toThrow();
+  });
+
+  it("saveSongData throws ConflictError carrying the server's newer state on 409", async () => {
+    const serverState: SongWorkspaceState = { ...sampleState, updatedAt: 999 };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 409, json: async () => serverState }),
+    );
+
+    await expect(saveSongData(sampleState)).rejects.toBeInstanceOf(ConflictError);
+    try {
+      await saveSongData(sampleState);
+    } catch (error) {
+      expect((error as ConflictError).existing).toEqual(serverState);
+    }
   });
 });

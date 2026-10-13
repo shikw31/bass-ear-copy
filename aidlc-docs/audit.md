@@ -249,3 +249,35 @@
 **Context**: Code Generation (Frontend Web App), Part 2, Steps 10-14 (awaiting user approval)
 
 ---
+
+## Code Generation (Frontend Web App) - Approved + GitHub Logging Request
+**Timestamp**: 2026-10-13T15:40:11Z
+**User Input**: "進めてほしいのと、GitHubにログを残したい。" Then clarified security concern: "GitHubに残すときは、ログインなどの機密性の高い情報やカギは残さないでほしいけど、できる？" AI explained existing safeguards (.gitignore for .env, no secrets held by frontend, pre-commit review). User: "リポジトリ作ってない！作るのは自分で進めないといけないよね？" AI offered to create via `gh repo create`. `gh auth status` initially showed invalid/expired token; user ran `gh auth login -h github.com` interactively in their terminal, completed browser device-code authorization successfully (verified via `gh auth status` and `gh api user`). User selected: repo visibility "Private（推奨）", repo name "bass-ear-copy（推奨）".
+**AI Response**: "Interpreted 'お願いします' as Continue to Next Stage approval for Code Generation (Frontend Web App) — stage marked complete (already recorded above). Separately: ran `git init`, reviewed `git add -A -n` dry-run output and `git diff --cached` grep for secret patterns (none found beyond doc mentions of the word 'secrets'), removed stray tsconfig.tsbuildinfo/tsconfig.node.tsbuildinfo cache files and added `*.tsbuildinfo` to frontend/.gitignore, added root .gitignore (.DS_Store), committed 103 files, created private GitHub repo `shikw31/bass-ear-copy` via `gh repo create --source=. --remote=origin`, ran `gh auth setup-git` to fix an initial push credential failure, pushed to origin/main successfully. Did not modify git config per Git Safety Protocol (auto-detected local commit identity left as-is)."
+**Context**: Code Generation (Frontend Web App) approval + ad-hoc GitHub repository setup (outside formal AI-DLC stage flow, at user's request)
+
+---
+
+## Functional Design (Backend Sync API) - Plan Q&A and Generation
+**Timestamp**: 2026-10-13T15:47:05Z
+**User Input**: Interactive Q&A in chat: Q1 "事前プロビジョニング（推奨）" (no public signup; single pre-provisioned account), Q2 "サーバーでLWWを強制（推奨）" (reject stale writes with 409 + latest data; acknowledged this requires a follow-up patch to Unit 1's SyncOrchestrationService to handle 409 instead of infinite-retrying)
+**AI Response**: "No ambiguity. Generated domain-entities.md (User, Session, SongRecord), business-rules.md (pre-provisioned account, password policy, 30-day sliding session, brute-force throttling, server-side input validation, server-enforced LWW, authorization scoping), business-logic-model.md (login/session-validation/logout/get/save logic flows, explicit note on required Unit 1 patch for 409 handling, PBT-01 property table). Flagged for user: when to apply the Unit 1 SyncOrchestrationService patch (now vs after Unit 2 completion)."
+**Context**: Functional Design (Backend Sync API), Steps 1-6 (awaiting user approval + decision on patch timing)
+
+---
+
+## Unit 1 Patch - Timing Decision + Implementation
+**Timestamp**: 2026-10-13T15:48:14Z
+**User Input**: "今すぐ修正（推奨）"
+**AI Response**: "Patching Unit 1's src/api/syncClient.ts (add ConflictError carrying server's existing SongWorkspaceState on HTTP 409) and src/services/syncOrchestrationService.ts (save() and flushQueue() now catch ConflictError specifically: merge via mergeLastWriteWins — which resolves to the server's newer record — persist locally, update the live workspace via importState in save(), and dequeue the entry instead of retrying forever). Adding a focused test for the conflict path."
+**Context**: Ad-hoc patch to already-approved Unit 1 code, triggered by Unit 2 Functional Design finding
+
+---
+
+## Unit 1 Patch - Verified and Documented
+**Timestamp**: 2026-10-13T15:52:50Z
+**User Input**: N/A (synthesis step)
+**AI Response**: "Added ConflictError to syncClient.ts (409 -> throws with server's existing SongWorkspaceState), updated SyncOrchestrationService.save()/flushQueue() to catch it and adopt server state via mergeLastWriteWins instead of retrying forever. Updated tests/api/syncClient.test.ts (409 case) and added tests/services/syncOrchestrationService.test.ts (conflict-adoption behavior). Verified: tsc clean, vitest 50/50 passing (14 files), npm run build succeeds. Documented in frontend-web-app/code/frontend-components-summary.md."
+**Context**: Unit 1 patch complete, ready to commit
+
+---

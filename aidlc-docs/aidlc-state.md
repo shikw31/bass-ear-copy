@@ -49,7 +49,7 @@
 - [x] Code Generation (verified: tsc, vitest 48/48, build, audit 0 vulnerabilities)
 
 ### CONSTRUCTION PHASE — Unit 2: Backend Sync API
-- [ ] Functional Design - EXECUTE
+- [x] Functional Design
 - [ ] NFR Requirements - EXECUTE
 - [ ] NFR Design - EXECUTE
 - [ ] Infrastructure Design - EXECUTE
