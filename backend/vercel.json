@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    { "source": "/auth/:path*", "destination": "/api/auth/:path*" },
+    { "source": "/songs/:path*", "destination": "/api/songs/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    }
+  ]
+}

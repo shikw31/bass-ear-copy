@@ -50,10 +50,11 @@
 
 ### CONSTRUCTION PHASE — Unit 2: Backend Sync API
 - [x] Functional Design
-- [ ] NFR Requirements - EXECUTE
-- [ ] NFR Design - EXECUTE
-- [ ] Infrastructure Design - EXECUTE
-- [ ] Code Generation - EXECUTE
+- [x] Unit 1 patch for server-enforced LWW (409 handling) — committed/pushed
+- [x] NFR Requirements (TypeScript+Hono, Upstash Redis)
+- [x] NFR Design
+- [x] Infrastructure Design (Vercel Serverless Functions, Upstash Redis)
+- [x] Code Generation (verified: tsc, vitest 31/31, audit 0 vulnerabilities)
 
 - [ ] Build and Test - EXECUTE (after all units complete)
 
@@ -62,6 +63,6 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: Unit 1 (Frontend Web App) — Code Generation Complete
-- **Next Stage**: Unit 2 (Backend Sync API) — Functional Design
-- **Status**: Ready to proceed (awaiting user approval of Unit 1 code generation)
+- **Current Stage**: Unit 2 (Backend Sync API) — Code Generation Complete (both units now code-complete)
+- **Next Stage**: Build and Test (all units)
+- **Status**: Ready to proceed (awaiting user approval of Unit 2 code generation)

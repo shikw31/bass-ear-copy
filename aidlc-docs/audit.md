@@ -281,3 +281,83 @@
 **Context**: Unit 1 patch complete, ready to commit
 
 ---
+
+## Functional Design (Backend Sync API) - Approved
+**Timestamp**: 2026-10-13T15:55:04Z
+**User Input**: "一旦進めてほしい！"
+**AI Response**: "Interpreted as Continue to Next Stage. Functional Design (Backend Sync API) marked complete (Unit 1 patch already committed/pushed). Proceeding to NFR Requirements (Backend Sync API)."
+**Context**: Functional Design → NFR Requirements transition (Unit 2)
+
+---
+
+## NFR Requirements (Backend Sync API) - Plan Q&A and Generation
+**Timestamp**: 2026-10-14T22:40:21Z
+**User Input**: Interactive Q&A in chat: Q1 "Node.js + TS + Hono（推奨）", Q2 "Upstash Redis（推奨）"
+**AI Response**: "No ambiguity (Hono+Upstash Redis are both serverless-friendly and consistent). Generated nfr-requirements.md and tech-stack-decisions.md (TypeScript+Hono, Upstash Redis, bcryptjs, zod, cookie-based sessions, Hono CORS middleware, IP-based rate limiting on login, Vitest+fast-check for PBT-09 — all consistent with Unit 1's stack choices where applicable)."
+**Context**: NFR Requirements (Backend Sync API), Steps 1-6 (awaiting user approval)
+
+---
+
+## NFR Requirements (Backend Sync API) - Approved
+**Timestamp**: 2026-10-14T22:44:03Z
+**User Input**: "進めて"
+**AI Response**: "Interpreted as Continue to Next Stage. Proceeding to NFR Design (Backend Sync API)."
+**Context**: NFR Requirements → NFR Design transition (Unit 2)
+
+---
+
+## NFR Design (Backend Sync API) - Generated
+**Timestamp**: 2026-10-14T22:44:27Z
+**User Input**: N/A (no questions asked — low-stakes implementation patterns with conventional best answers, consistent with Unit 1's NFR Design approach)
+**AI Response**: "Generated nfr-design-patterns.md (minimal resilience per Resiliency Baseline opt-out, HTTP-based Upstash Redis client for serverless, middleware-based security enforcement, fail-closed auth) and logical-components.md (SessionStore, SongRecordStore, UserStore, RateLimiter, AuthMiddleware, GlobalErrorHandler)."
+**Context**: NFR Design (Backend Sync API), Steps 1-6 (awaiting user approval)
+
+---
+
+## NFR Design (Backend Sync API) - Approved
+**Timestamp**: 2026-10-15T11:22:28Z
+**User Input**: "進めて"
+**AI Response**: "Interpreted as Continue to Next Stage. Proceeding to Infrastructure Design (Backend Sync API)."
+**Context**: NFR Design → Infrastructure Design transition (Unit 2)
+
+---
+
+## Infrastructure Design (Backend Sync API) - Generated
+**Timestamp**: 2026-10-15T11:23:11Z
+**User Input**: N/A (decisions followed directly from already-made NFR tech-stack choices; no new questions needed)
+**AI Response**: "Generated infrastructure-design.md (Vercel Serverless Functions as a separate project from Unit 1 per the 2-unit independent-deploy decision, Upstash Redis, secrets via Vercel env vars, pre-provisioning via a one-time local script rather than runtime env vars, SECURITY-04 marked N/A for this JSON-only API with HSTS/X-Content-Type-Options still applied, CORS restricted to FRONTEND_ORIGIN) and deployment-architecture.md (deploy flow diagram, env var table reference, CI/CD integrity, rollback, first-time setup steps)."
+**Context**: Infrastructure Design (Backend Sync API), Steps 1-6 (awaiting user approval)
+
+---
+
+## Infrastructure Design (Backend Sync API) - Approved
+**Timestamp**: 2026-10-15T11:24:05Z
+**User Input**: "進めて"
+**AI Response**: "Interpreted as Continue to Next Stage. Proceeding to Code Generation (Backend Sync API), Part 1: Planning."
+**Context**: Infrastructure Design → Code Generation transition (Unit 2)
+
+---
+
+## Code Generation (Backend Sync API) - Plan Created
+**Timestamp**: 2026-10-15T11:24:32Z
+**User Input**: N/A (synthesis step)
+**AI Response**: "Created backend-sync-api-code-generation-plan.md with 14 numbered steps mirroring Unit 1's structure (Project Setup, Business Logic Gen/Test/Summary, Repository Layer Gen/Test/Summary, API Layer Gen/Test/Summary, Frontend Components N/A, DB Migration N/A, Documentation, Deployment Artifacts). Presenting plan for approval."
+**Context**: Code Generation (Backend Sync API), Part 1 Planning, Steps 1-6 (awaiting user approval)
+
+---
+
+## Code Generation (Backend Sync API) - Plan Approved
+**Timestamp**: 2026-10-15T13:59:55Z
+**User Input**: "進めて"
+**AI Response**: "Interpreted as explicit approval. Proceeding to Part 2: Generation."
+**Context**: Code Generation (Backend Sync API), Part 1 → Part 2 transition
+
+---
+
+## Code Generation (Backend Sync API) - Generation Complete
+**Timestamp**: 2026-10-17T06:45:45Z
+**User Input**: N/A (synthesis step)
+**AI Response**: "Executed all 14 plan steps, generating backend/ (TypeScript+Hono app: domain types, business logic with PBT tests for password hashing/session sliding-expiration/server-enforced LWW/zod validation, Upstash Redis-backed stores tested via an in-memory fake, Hono routes+middleware (auth, rate limiting, CORS, global error handler) tested via app.request(), create-account provisioning script, README, vercel.json with rewrites mapping /auth/* and /songs/* to the catch-all Vercel function). Fixed a vi.mock pitfall (arrow-function mockImplementation can't be called with `new`; switched to function expressions) discovered while writing route tests. Verified: tsc clean, vitest 31/31 passing (9 files), npm audit 0 vulnerabilities (current dependency versions, no stale pins this time)."
+**Context**: Code Generation (Backend Sync API), Part 2, Steps 10-14 (awaiting user approval)
+
+---
