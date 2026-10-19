@@ -59,10 +59,10 @@
 - [x] Build and Test (81/81 automatable tests passing; manual audio + Upstash/Vercel verification pending — see build-and-test-summary.md)
 
 ### OPERATIONS PHASE
-- [ ] Operations - PLACEHOLDER
+- [x] Operations - PLACEHOLDER (no actions defined; AI-DLC workflow ends here per operations.md)
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: Build and Test Complete
-- **Next Stage**: Operations (placeholder) — or user-driven manual verification (Upstash/Vercel setup, real-browser audio check) per build-and-test-summary.md Next Steps
-- **Status**: Ready to proceed (awaiting user approval of build and test results)
+- **Lifecycle Phase**: COMPLETE
+- **Current Stage**: Operations (placeholder) reached — formal AI-DLC workflow finished
+- **Remaining work**: User-driven manual steps only — see `aidlc-docs/construction/build-and-test/build-and-test-summary.md` "Next Steps" (Upstash Redis setup, account provisioning, real-browser audio check, Vercel deploys for both units)
+- **Status**: Workflow complete. Available for ad-hoc requests (bug fixes, new features, deployment help) outside the formal stage sequence.
