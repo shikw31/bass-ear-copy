@@ -7,12 +7,14 @@
     "node": ">=20.0.0"
   },
   "scripts": {
+    "dev": "tsx watch src/dev-server.ts",
     "build": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "create-account": "tsx scripts/create-account.ts"
   },
   "dependencies": {
+    "@hono/node-server": "2.1.5",
     "@upstash/ratelimit": "2.2.0",
     "@upstash/redis": "1.39.0",
     "bcryptjs": "3.0.3",

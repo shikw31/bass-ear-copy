@@ -56,13 +56,13 @@
 - [x] Infrastructure Design (Vercel Serverless Functions, Upstash Redis)
 - [x] Code Generation (verified: tsc, vitest 31/31, audit 0 vulnerabilities)
 
-- [ ] Build and Test - EXECUTE (after all units complete)
+- [x] Build and Test (81/81 automatable tests passing; manual audio + Upstash/Vercel verification pending — see build-and-test-summary.md)
 
 ### OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: Unit 2 (Backend Sync API) — Code Generation Complete (both units now code-complete)
-- **Next Stage**: Build and Test (all units)
-- **Status**: Ready to proceed (awaiting user approval of Unit 2 code generation)
+- **Current Stage**: Build and Test Complete
+- **Next Stage**: Operations (placeholder) — or user-driven manual verification (Upstash/Vercel setup, real-browser audio check) per build-and-test-summary.md Next Steps
+- **Status**: Ready to proceed (awaiting user approval of build and test results)

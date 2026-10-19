@@ -17,6 +17,10 @@ app.use(
   }),
 );
 
+// Health check — useful for confirming the server/function is up before Upstash credentials
+// are configured (see build-and-test/integration-test-instructions.md).
+app.get("/health", (c) => c.json({ status: "ok" }));
+
 app.route("/auth", authRoutes);
 app.use("/songs/*", authMiddleware);
 app.route("/songs", songsRoutes);
