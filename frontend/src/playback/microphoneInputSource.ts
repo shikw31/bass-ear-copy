@@ -21,7 +21,12 @@ export class MicrophoneInputSource implements PlaybackSource {
   private timeUpdateHandle: ReturnType<typeof setInterval> | null = null;
 
   async load(): Promise<void> {
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Default mic constraints are tuned for voice calls (noise suppression / echo cancellation /
+    // auto-gain can flatten or suppress music — especially sustained bass tones misread as
+    // "noise"). Disabled here since this is a music line-in use case, not a voice chat.
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
     this.audioContext = new AudioContext();
     this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
 
