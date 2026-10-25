@@ -1,5 +1,7 @@
 # Build and Test Summary
 
+> **2026-10-25改訂のお知らせ**: この記録はFR8（認証・クラウド同期）削除前のもの。Unit 2 (Backend Sync API)は以降フロントエンドから未使用。最新状況は`aidlc-docs/aidlc-state.md`のChange Logおよび更新後の`Next Steps`（本ファイル末尾）を参照。
+
 ## Build Status
 - **Build Tool**: npm + tsc（両Unit）、Vite（Unit 1のみ、バンドル）
 - **Build Status**: Success（両Unit）
@@ -33,9 +35,12 @@
 - **All Automatable Tests**: Pass（81/81）
 - **Ready for Operations**: 条件付きでYes — Upstash Redisアカウントの作成とVercelへのデプロイ（infrastructure-design.mdのセットアップ手順）、および実際の音声での動作確認が残っている
 
-## Next Steps
+## Next Steps（2026-10-25改訂後: Unit 2不要）
+1. `integration-test-instructions.md`のScenario 1を実際のブラウザ（音声出力あり）で確認する（ログイン不要になったため、これが唯一の必須確認）
+2. Frontendのみを Vercel にデプロイする（Backendのデプロイ・Upstash Redisのセットアップは不要）
+3. 上記が確認できたら完了
+
+### 旧Next Steps（FR8削除前、参考情報）
 1. Upstash Redisアカウントを作成し、`backend/.env.local`に接続情報を設定する
 2. `backend/scripts/create-account.ts`で自分のアカウントを作成する
-3. `integration-test-instructions.md`のScenario 1を実際のブラウザ（音声出力あり）で確認する
-4. Frontend/BackendをそれぞれVercelにデプロイし、Scenario 3（連携確認）を実施する
-5. 上記が全て確認できたら、Operationsフェーズ（将来拡張のプレースホルダー）へ
+3. Frontend/BackendをそれぞれVercelにデプロイし、Scenario 3（連携確認）を実施する

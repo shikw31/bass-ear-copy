@@ -1,5 +1,7 @@
 # Integration Test Instructions
 
+> **2026-10-25改訂**: FR8（認証・クラウド同期）削除により、Scenario 2・3（Backend連携）は不要になった。フロントエンド単体のScenario 1のみが有効。Unit 2は参考として残す。
+
 ## Purpose
 Unit 1（Frontend）とUnit 2（Backend）を実際に連携させて動作確認する。加えて、自動化ツールでは検証しきれない「実際の音声再生」を手動で確認する手順を示す。
 

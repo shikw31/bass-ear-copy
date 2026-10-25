@@ -1,17 +1,9 @@
-import type { SyncStatus } from "../services/syncOrchestrationService";
-
 interface Props {
-  status: SyncStatus | null;
+  saved: boolean;
 }
 
-const LABELS: Record<SyncStatus, string> = {
-  "saved-locally": "ローカルに保存済み",
-  synced: "クラウドに同期済み",
-  "sync-pending": "同期待ち（再試行中）",
-  "sync-failed": "同期に失敗しました",
-};
-
-export function SaveStatusIndicator({ status }: Props) {
-  if (!status) return null;
-  return <span data-testid="save-status-indicator">{LABELS[status]}</span>;
+// Local-only persistence (no login, no cloud sync — see project decision to drop accounts).
+export function SaveStatusIndicator({ saved }: Props) {
+  if (!saved) return null;
+  return <span data-testid="save-status-indicator">ローカルに保存済み</span>;
 }

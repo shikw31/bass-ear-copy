@@ -42,13 +42,3 @@ export interface PlaybackCapabilities {
   loopPrecision: "sample" | "approximate";
 }
 
-export interface Session {
-  userId: string;
-  expiresAt: number;
-}
-
-export interface SyncQueueEntry {
-  songKey: string;
-  state: SongWorkspaceState;
-  queuedAt: number;
-}

@@ -7,6 +7,7 @@ import { LoopEditor } from "../playback/loopEditor";
 import type { LocalAudioEngine } from "../playback/localAudioEngine";
 import type { SongWorkspaceState, SourceType } from "../domain/types";
 import { validateMemoText, type ValidationResult } from "../logic/validation";
+import { loadSongState, saveSongState } from "../logic/localStorageAdapter";
 
 export interface SongWorkspaceParams {
   songKey: string;
@@ -16,8 +17,9 @@ export interface SongWorkspaceParams {
 
 // SongWorkspace (see components.md). Aggregates one song's playback source, the
 // Local-only processors (EQ/TimeStretch/Pitch/Waveform — null for YouTube sources), the
-// LoopEditor, and the memo text, and knows how to (de)serialize the saved/synced slice of its
-// state (loopPoints + memo) as a SongWorkspaceState.
+// LoopEditor, and the memo text. Persistence is local-only (browser storage, keyed by songKey) —
+// there is no account/login or cross-device sync (see aidlc-docs project decision: login-less
+// scope reduction).
 export class SongWorkspace {
   readonly songKey: string;
   readonly sourceType: SourceType;
@@ -87,6 +89,15 @@ export class SongWorkspace {
       this.memoText = state.memo.text;
     }
     this.updatedAt = state.updatedAt;
+  }
+
+  loadLocal(): void {
+    const state = loadSongState(this.songKey);
+    if (state) this.importState(state);
+  }
+
+  saveLocal(): void {
+    saveSongState(this.exportState());
   }
 
   dispose(): void {

@@ -385,3 +385,27 @@
 **Context**: Build and Test → Operations (placeholder) — AI-DLC workflow complete
 
 ---
+
+## Change Request: Remove Authentication / Cloud Sync (Post-Workflow)
+**Timestamp**: 2026-10-25T02:46:44Z
+**User Input**: "ただウェブで動かすだけでよくて、ログイン・ログアウトとかもいらないアプリとして作成できる？"
+**AI Response**: "Flagged the trade-off (no auto cross-device sync of loop points/memos once login is removed) and asked for confirmation before acting."
+**Context**: Scope change request after formal workflow completion
+
+---
+
+## Change Request - Clarifying Questions Answered
+**Timestamp**: 2026-10-25T02:46:44Z
+**User Input**: Q1 "それでよい（推奨）" (accept that each device keeps independent local-only storage, no sync), Q2 "残しておく（未使用）" (keep backend/ in the repo but unused, rather than deleting it)
+**AI Response**: "Proceeded to remove auth/sync from the frontend while leaving backend/ untouched in the repo."
+**Context**: Change request scoping
+
+---
+
+## Change Request - Implementation Complete
+**Timestamp**: 2026-10-25T02:46:44Z
+**User Input**: N/A (synthesis step)
+**AI Response**: "Removed from frontend/: src/api/ (authClient.ts, syncClient.ts), src/components/AuthBar.tsx, src/services/syncOrchestrationService.ts, src/logic/{retryQueueManager,networkStatusMonitor,mergeLastWriteWins}.ts, their test files, .env.example. Removed Session/SyncQueueEntry from domain/types.ts and the now-unused sync-queue functions from localStorageAdapter.ts. Added SongWorkspace.loadLocal()/saveLocal() for direct local persistence. Simplified SaveStatusIndicator to a single boolean 'saved' state, PlayerScreen/App.tsx accordingly. Updated vercel.json CSP (dropped backend connect-src) and README.md. Updated requirements.md (FR7/FR8, NFR4, NFR6, added a Change Log section), aidlc-state.md (Units section + new Change Log section), and build-and-test-summary.md/integration-test-instructions.md (noted Unit 2 scenarios no longer apply). Verified: tsc clean, vitest 36/36 passing (10 files, down from 50/14 after removing auth/sync tests), npm run build succeeds, npm audit 0 vulnerabilities. Browser-smoke-tested via chrome-devtools MCP: AuthBar is gone from the UI, local file upload still renders PlayerScreen with full capabilities, clicking Save shows 'ローカルに保存済み' without touching any backend. Did not delete backend/ (kept unused per user's choice)."
+**Context**: Change request complete, ready to commit
+
+---

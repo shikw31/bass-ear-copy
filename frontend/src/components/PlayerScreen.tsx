@@ -1,5 +1,4 @@
 import type { SongWorkspace } from "../services/songWorkspace";
-import type { SyncOrchestrationService, SyncStatus } from "../services/syncOrchestrationService";
 import type { LocalAudioEngine } from "../playback/localAudioEngine";
 import { TransportControls } from "./TransportControls";
 import { SpeedControl } from "./SpeedControl";
@@ -13,20 +12,18 @@ import { useState } from "react";
 
 interface Props {
   workspace: SongWorkspace;
-  syncService: SyncOrchestrationService;
   onError: (message: string) => void;
 }
 
-export function PlayerScreen({ workspace, syncService, onError }: Props) {
-  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+export function PlayerScreen({ workspace, onError }: Props) {
+  const [saved, setSaved] = useState(false);
   const capabilities = workspace.source.getCapabilities();
 
-  async function handleSave() {
+  function handleSave() {
     try {
-      const status = await syncService.save(workspace);
-      setSyncStatus(status);
+      workspace.saveLocal();
+      setSaved(true);
     } catch {
-      setSyncStatus("sync-failed");
       onError("保存中にエラーが発生しました");
     }
   }
@@ -37,7 +34,7 @@ export function PlayerScreen({ workspace, syncService, onError }: Props) {
       onError(result.error);
       return;
     }
-    void handleSave();
+    handleSave();
   }
 
   function handleRateChange(rate: number) {
@@ -68,10 +65,10 @@ export function PlayerScreen({ workspace, syncService, onError }: Props) {
         />
       )}
       <MemoEditor initialText={workspace.getMemoText()} onCommit={handleMemoCommit} />
-      <button type="button" data-testid="player-screen-save-button" onClick={() => void handleSave()}>
+      <button type="button" data-testid="player-screen-save-button" onClick={handleSave}>
         保存
       </button>
-      <SaveStatusIndicator status={syncStatus} />
+      <SaveStatusIndicator saved={saved} />
     </div>
   );
 }
