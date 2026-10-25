@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { openInput } from "./services/playbackOrchestrationService";
+import { openInput, openMicInput } from "./services/playbackOrchestrationService";
 import type { SongWorkspace } from "./services/songWorkspace";
 import { InputScreen } from "./components/InputScreen";
 import { PlayerScreen } from "./components/PlayerScreen";
@@ -21,6 +21,17 @@ export function App() {
     }
   }
 
+  async function handleOpenMicInput() {
+    try {
+      workspace?.dispose();
+      const next = await openMicInput();
+      next.loadLocal();
+      setWorkspace(next);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "マイクの起動に失敗しました");
+    }
+  }
+
   return (
     <div data-testid="app-root">
       <div
@@ -32,6 +43,7 @@ export function App() {
         <InputScreen
           onOpenLocalFile={handleOpenInput}
           onOpenYouTubeUrl={handleOpenInput}
+          onOpenMicInput={handleOpenMicInput}
           onError={setErrorMessage}
         />
       )}

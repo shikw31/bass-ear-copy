@@ -20,6 +20,7 @@ function fakeSource(getCurrentTime: () => number): PlaybackSource {
       supportsPitchDisplay: true,
       supportsWaveform: true,
       supportsSpeedChange: true,
+      supportsLoop: true,
       loopPrecision: "sample",
     }),
     dispose: () => {},

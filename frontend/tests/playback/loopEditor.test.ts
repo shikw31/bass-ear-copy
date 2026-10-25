@@ -23,6 +23,7 @@ function fakeSource(durationSec: number): PlaybackSource & { loop: { a: number; 
       supportsPitchDisplay: true,
       supportsWaveform: true,
       supportsSpeedChange: true,
+      supportsLoop: true,
       loopPrecision: "sample",
     }),
     dispose: () => {},

@@ -1,5 +1,4 @@
 import type { SongWorkspace } from "../services/songWorkspace";
-import type { LocalAudioEngine } from "../playback/localAudioEngine";
 import { TransportControls } from "./TransportControls";
 import { SpeedControl } from "./SpeedControl";
 import { EQControl } from "./EQControl";
@@ -50,19 +49,18 @@ export function PlayerScreen({ workspace, onError }: Props) {
       <TransportControls playbackSource={workspace.source} />
       {capabilities.supportsSpeedChange && <SpeedControl onRateChange={handleRateChange} />}
       {capabilities.supportsEQ && workspace.eq && <EQControl eqProcessor={workspace.eq} />}
-      <LoopControls
-        loopEditor={workspace.loopEditor}
-        capabilities={capabilities}
-        getCurrentTime={() => workspace.source.getCurrentTime()}
-      />
+      {capabilities.supportsLoop && (
+        <LoopControls
+          loopEditor={workspace.loopEditor}
+          capabilities={capabilities}
+          getCurrentTime={() => workspace.source.getCurrentTime()}
+        />
+      )}
       {capabilities.supportsPitchDisplay && workspace.pitchDetector && (
         <PitchDisplay pitchDetector={workspace.pitchDetector} />
       )}
-      {capabilities.supportsWaveform && workspace.waveform && (
-        <WaveformCanvas
-          waveformVisualizer={workspace.waveform}
-          analyserNode={(workspace.source as LocalAudioEngine).getAnalyserNode()}
-        />
+      {capabilities.supportsWaveform && workspace.waveform && workspace.getAnalyserNode() && (
+        <WaveformCanvas waveformVisualizer={workspace.waveform} analyserNode={workspace.getAnalyserNode()!} />
       )}
       <MemoEditor initialText={workspace.getMemoText()} onCommit={handleMemoCommit} />
       <button type="button" data-testid="player-screen-save-button" onClick={handleSave}>

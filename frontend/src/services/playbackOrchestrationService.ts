@@ -1,6 +1,11 @@
 import { detectInputType, loadLocalFile, loadYouTubeUrl } from "../logic/audioInputManager";
 import { songKeyForLocalFile, songKeyForYouTubeUrl } from "../logic/songKey";
+import { MicrophoneInputSource } from "../playback/microphoneInputSource";
 import { SongWorkspace } from "./songWorkspace";
+
+// Fixed key: a mic session isn't tied to a specific file/URL, so notes just persist across
+// mic sessions in general rather than per distinct "song".
+const MIC_SESSION_SONG_KEY = "mic:session";
 
 // PlaybackOrchestrationService (see services.md): the single entry point the UI calls to go
 // from "a file or a URL" to a fully wired SongWorkspace, regardless of which PlaybackSource ends
@@ -29,4 +34,14 @@ export async function openInput(
   }
 
   throw new Error("入力が無効です（対応ファイル形式、またはYouTube URLを指定してください）");
+}
+
+export async function openMicInput(): Promise<SongWorkspace> {
+  const source = new MicrophoneInputSource();
+  try {
+    await source.load();
+  } catch {
+    throw new Error("マイクへのアクセスが許可されませんでした");
+  }
+  return new SongWorkspace({ songKey: MIC_SESSION_SONG_KEY, sourceType: "mic", source });
 }

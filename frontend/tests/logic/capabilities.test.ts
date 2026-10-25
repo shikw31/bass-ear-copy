@@ -8,6 +8,7 @@ describe("capabilitiesFor (example-based, PBT-10 pairing)", () => {
       supportsPitchDisplay: true,
       supportsWaveform: true,
       supportsSpeedChange: true,
+      supportsLoop: true,
       loopPrecision: "sample",
     });
   });
@@ -18,6 +19,18 @@ describe("capabilitiesFor (example-based, PBT-10 pairing)", () => {
       supportsPitchDisplay: false,
       supportsWaveform: false,
       supportsSpeedChange: true,
+      supportsLoop: true,
+      loopPrecision: "approximate",
+    });
+  });
+
+  it("grants EQ/pitch/waveform but no transport control for mic input", () => {
+    expect(capabilitiesFor("mic")).toEqual({
+      supportsEQ: true,
+      supportsPitchDisplay: true,
+      supportsWaveform: true,
+      supportsSpeedChange: false,
+      supportsLoop: false,
       loopPrecision: "approximate",
     });
   });

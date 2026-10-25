@@ -1,6 +1,9 @@
 // Domain entities (see aidlc-docs/construction/frontend-web-app/functional-design/domain-entities.md)
 
-export type SourceType = "local" | "youtube";
+// "mic": an external source (YouTube on another device, a CD, a live instrument) monitored
+// live through the microphone — see playback/microphoneInputSource.ts for why this exists
+// (YouTube's own embed can't expose raw audio for EQ/pitch/waveform processing).
+export type SourceType = "local" | "youtube" | "mic";
 
 export interface Song {
   songKey: string;
@@ -39,6 +42,7 @@ export interface PlaybackCapabilities {
   supportsPitchDisplay: boolean;
   supportsWaveform: boolean;
   supportsSpeedChange: boolean;
+  supportsLoop: boolean;
   loopPrecision: "sample" | "approximate";
 }
 

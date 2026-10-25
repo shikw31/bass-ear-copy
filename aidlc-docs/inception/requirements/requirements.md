@@ -90,3 +90,9 @@
 - **影響**: 自宅PCとスタジオのスマホ間でのループ区間・メモの自動同期ができなくなる（各端末で個別にローカル保存）。ユーザーはこのトレードオフを確認し合意済み
 - **既存のUnit 2（`backend/`）**: 削除せずリポジトリに残すが、フロントエンドからは呼び出さない（未使用）
 - **実装**: `frontend/src/api/`, `AuthBar.tsx`, `syncOrchestrationService.ts`, `retryQueueManager.ts`, `networkStatusMonitor.ts`, `mergeLastWriteWins.ts`を削除。`SongWorkspace`に`loadLocal()`/`saveLocal()`を追加し、ローカルストレージへの直接読み書きに簡素化
+
+### 2026-10-25: マイク入力モード（FR2拡張）を追加
+- **変更内容**: 新しい音源入力方式「マイク入力」を追加。YouTube等を別端末・スピーカーで再生しつつ、マイク経由でこのアプリに音を入力し、低音域EQ・音程表示・波形表示を使えるようにした
+- **理由**: 実際に試したユーザーから「YouTubeでEQ・音程表示が使えないと意味がない」とのフィードバック。YouTube埋め込みから直接音声を取得する方法は技術的に不可能（同一タブ内で元の音を消さずに処理済み音に置き換えることができない）と判明したため、別端末で再生した音をマイクで取り込むという現実的な代替案を提示し、合意の上で実装
+- **制約**: 再生速度変更・ループはマイク入力では使えない（外部の再生デバイスを操作できないため）。ヘッドホン推奨（スピーカー使用時はハウリングの原因になる）
+- **実装**: `MicrophoneInputSource`（`PlaybackSource`実装）を追加。`PlaybackCapabilities`に`supportsLoop`フィールドを追加（YouTubeは`true`、マイク入力は`false`）。`BassEqProcessor.attach()`の型を`LocalAudioEngine`固定から汎用インターフェース（`EqCapableSource`）に変更し、ローカルファイルとマイク入力の両方で再利用

@@ -3,10 +3,11 @@ import { useRef, useState } from "react";
 interface Props {
   onOpenLocalFile: (file: File) => void;
   onOpenYouTubeUrl: (url: string) => void;
+  onOpenMicInput: () => void;
   onError: (message: string) => void;
 }
 
-export function InputScreen({ onOpenLocalFile, onOpenYouTubeUrl, onError }: Props) {
+export function InputScreen({ onOpenLocalFile, onOpenYouTubeUrl, onOpenMicInput, onError }: Props) {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,6 +49,15 @@ export function InputScreen({ onOpenLocalFile, onOpenYouTubeUrl, onError }: Prop
         />
         <button type="button" data-testid="input-screen-youtube-submit-button" onClick={handleYoutubeSubmit}>
           読み込む
+        </button>
+      </section>
+      <section>
+        <p>
+          マイク入力（YouTube等を別端末で再生しつつ、低音域EQ・音程表示・波形表示を使いたい場合。<strong>ヘッドホン推奨</strong>
+          — スピーカーだとマイクが音を拾って発生するハウリングの原因になります）
+        </p>
+        <button type="button" data-testid="input-screen-mic-input-button" onClick={onOpenMicInput}>
+          マイク入力を開始
         </button>
       </section>
     </div>

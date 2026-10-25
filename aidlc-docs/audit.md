@@ -409,3 +409,19 @@
 **Context**: Change request complete, ready to commit
 
 ---
+
+## Feature Request: Microphone Input Mode (Post-Workflow)
+**Timestamp**: 2026-10-25T08:14:40Z
+**User Input**: User tried the app in a real browser ("実際に音もなったし、ループもスローもできた！"), then asked about the EQ slider not appearing ("EQのスライダーないよ。再生始めたら変えられないってこと？"). Explained EQ/pitch/waveform are local-file-only (YouTube embed can't expose raw audio). User: "YouTubeでできないと意味ないなあ".
+**AI Response**: "Explained the technical dead-end for processing YouTube's own tab audio in-place (muting the original to replace it with a processed copy just captures silence — can't both mute and capture the same signal). Proposed a realistic alternative: a microphone input mode where the external source (YouTube on another device/speaker) is monitored live via mic, enabling EQ/pitch/waveform (no transport control, headphones recommended to avoid feedback). Asked for confirmation before building."
+**Context**: Feature request scoping after real-browser testing surfaced a usability gap
+
+---
+
+## Feature Request - Implementation Complete
+**Timestamp**: 2026-10-25T08:14:40Z
+**User Input**: "作ってみて（推奨）"
+**AI Response**: "Added SourceType 'mic' and PlaybackCapabilities.supportsLoop (true for local/youtube, false for mic). Created playback/microphoneInputSource.ts (PlaybackSource impl via getUserMedia + BiquadFilterNode + AnalyserNode, not connected to destination until play() to avoid any audio before opt-in). Generalized BassEqProcessor.attach() to a new EqCapableSource interface (structural, no longer locked to LocalAudioEngine) so EQ works for both local files and mic input. SongWorkspace now wires EQ/pitch/waveform for 'mic' sourceType too (no timeStretch, since there's no transport to control) and exposes getAnalyserNode() directly instead of callers casting workspace.source. Added playbackOrchestrationService.openMicInput() (fixed songKey 'mic:session' since a mic session isn't tied to a specific file/URL). Updated TransportControls to hide the seek bar/duration when getDuration() is 0 (mic has no seekable duration). Updated PlayerScreen to conditionally render LoopControls on capabilities.supportsLoop. Added a mic input section to InputScreen with a headphones-recommended warning (feedback risk). Updated/added tests for capabilities.ts (mic case), LoopControls/loopEditor fixtures (supportsLoop field), InputScreen (mic button). Verified: tsc clean, vitest 38/38 passing, build succeeds. `npm audit` surfaced an unrelated new high-severity transitive vulnerability (undici, newly disclosed) — fixed via `npm audit fix` (non-breaking), re-verified 0 vulnerabilities and tests/build still green. Browser-smoke-tested via chrome-devtools MCP: mic button correctly triggers the real getUserMedia permission flow and shows a graceful 'マイクへのアクセスが許可されませんでした' error (no crash) since the sandboxed browser has no real mic device — the actual EQ/pitch/waveform-on-mic-audio happy path needs verification in the user's real browser with a working microphone. Updated requirements.md (new Change Log entry) and frontend/README.md."
+**Context**: Feature complete, ready to commit
+
+---

@@ -6,7 +6,12 @@ describe("InputScreen", () => {
   it("calls onOpenYouTubeUrl with the entered URL", () => {
     const onOpenYouTubeUrl = vi.fn();
     render(
-      <InputScreen onOpenLocalFile={() => {}} onOpenYouTubeUrl={onOpenYouTubeUrl} onError={() => {}} />,
+      <InputScreen
+        onOpenLocalFile={() => {}}
+        onOpenYouTubeUrl={onOpenYouTubeUrl}
+        onOpenMicInput={() => {}}
+        onError={() => {}}
+      />,
     );
 
     fireEvent.change(screen.getByTestId("input-screen-youtube-url-input"), {
@@ -19,7 +24,14 @@ describe("InputScreen", () => {
 
   it("reports an error when submitting an empty YouTube URL", () => {
     const onError = vi.fn();
-    render(<InputScreen onOpenLocalFile={() => {}} onOpenYouTubeUrl={() => {}} onError={onError} />);
+    render(
+      <InputScreen
+        onOpenLocalFile={() => {}}
+        onOpenYouTubeUrl={() => {}}
+        onOpenMicInput={() => {}}
+        onError={onError}
+      />,
+    );
 
     fireEvent.click(screen.getByTestId("input-screen-youtube-submit-button"));
 
@@ -29,7 +41,12 @@ describe("InputScreen", () => {
   it("calls onOpenLocalFile when a file is selected", () => {
     const onOpenLocalFile = vi.fn();
     render(
-      <InputScreen onOpenLocalFile={onOpenLocalFile} onOpenYouTubeUrl={() => {}} onError={() => {}} />,
+      <InputScreen
+        onOpenLocalFile={onOpenLocalFile}
+        onOpenYouTubeUrl={() => {}}
+        onOpenMicInput={() => {}}
+        onError={() => {}}
+      />,
     );
 
     const file = new File(["data"], "song.mp3", { type: "audio/mpeg" });
@@ -37,5 +54,21 @@ describe("InputScreen", () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     expect(onOpenLocalFile).toHaveBeenCalledWith(file);
+  });
+
+  it("calls onOpenMicInput when the mic button is clicked", () => {
+    const onOpenMicInput = vi.fn();
+    render(
+      <InputScreen
+        onOpenLocalFile={() => {}}
+        onOpenYouTubeUrl={() => {}}
+        onOpenMicInput={onOpenMicInput}
+        onError={() => {}}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("input-screen-mic-input-button"));
+
+    expect(onOpenMicInput).toHaveBeenCalledOnce();
   });
 });

@@ -8,14 +8,28 @@ export function capabilitiesFor(sourceType: SourceType): PlaybackCapabilities {
       supportsPitchDisplay: true,
       supportsWaveform: true,
       supportsSpeedChange: true,
+      supportsLoop: true,
       loopPrecision: "sample",
     };
   }
+  if (sourceType === "youtube") {
+    return {
+      supportsEQ: false,
+      supportsPitchDisplay: false,
+      supportsWaveform: false,
+      supportsSpeedChange: true,
+      supportsLoop: true,
+      loopPrecision: "approximate",
+    };
+  }
+  // "mic": raw audio is available (so EQ/pitch/waveform work), but there is no transport to
+  // control (no speed change, no loop) since the actual source plays on a separate device.
   return {
-    supportsEQ: false,
-    supportsPitchDisplay: false,
-    supportsWaveform: false,
-    supportsSpeedChange: true,
+    supportsEQ: true,
+    supportsPitchDisplay: true,
+    supportsWaveform: true,
+    supportsSpeedChange: false,
+    supportsLoop: false,
     loopPrecision: "approximate",
   };
 }

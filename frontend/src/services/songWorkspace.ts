@@ -5,6 +5,7 @@ import { PitchDetector } from "../playback/pitchDetector";
 import { WaveformVisualizer } from "../playback/waveformVisualizer";
 import { LoopEditor } from "../playback/loopEditor";
 import type { LocalAudioEngine } from "../playback/localAudioEngine";
+import type { MicrophoneInputSource } from "../playback/microphoneInputSource";
 import type { SongWorkspaceState, SourceType } from "../domain/types";
 import { validateMemoText, type ValidationResult } from "../logic/validation";
 import { loadSongState, saveSongState } from "../logic/localStorageAdapter";
@@ -29,6 +30,7 @@ export class SongWorkspace {
   readonly timeStretch: TimeStretchProcessor | null;
   readonly pitchDetector: PitchDetector | null;
   readonly waveform: WaveformVisualizer | null;
+  private readonly analyserNode: AnalyserNode | null;
 
   private memoText = "";
   private updatedAt = 0;
@@ -45,15 +47,32 @@ export class SongWorkspace {
       this.eq.attach(engine);
       this.timeStretch = new TimeStretchProcessor();
       this.timeStretch.attach(engine);
+      this.analyserNode = engine.getAnalyserNode();
       this.pitchDetector = new PitchDetector();
-      this.pitchDetector.attach(engine.getAnalyserNode());
+      this.pitchDetector.attach(this.analyserNode);
+      this.waveform = new WaveformVisualizer();
+    } else if (sourceType === "mic") {
+      // No transport to control (no speed change, no loop) — see capabilities.ts — but raw
+      // audio is available, so EQ/pitch/waveform work the same way as for local files.
+      const mic = source as MicrophoneInputSource;
+      this.eq = new BassEqProcessor();
+      this.eq.attach(mic);
+      this.timeStretch = null;
+      this.analyserNode = mic.getAnalyserNode();
+      this.pitchDetector = new PitchDetector();
+      this.pitchDetector.attach(this.analyserNode);
       this.waveform = new WaveformVisualizer();
     } else {
       this.eq = null;
       this.timeStretch = null;
       this.pitchDetector = null;
       this.waveform = null;
+      this.analyserNode = null;
     }
+  }
+
+  getAnalyserNode(): AnalyserNode | null {
+    return this.analyserNode;
   }
 
   getMemoText(): string {
