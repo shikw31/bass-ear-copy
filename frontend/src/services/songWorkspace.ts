@@ -6,9 +6,15 @@ import { WaveformVisualizer } from "../playback/waveformVisualizer";
 import { LoopEditor } from "../playback/loopEditor";
 import type { LocalAudioEngine } from "../playback/localAudioEngine";
 import type { MicrophoneInputSource } from "../playback/microphoneInputSource";
-import type { SongWorkspaceState, SourceType } from "../domain/types";
+import type { SongWorkspaceState, SourceType, TranscriptEntry } from "../domain/types";
 import { validateMemoText, type ValidationResult } from "../logic/validation";
 import { loadSongState, saveSongState } from "../logic/localStorageAdapter";
+import { NoteTranscriptLogger } from "../logic/noteTranscriptLogger";
+import { formatPosition, primaryPositionForFrequency } from "../logic/bassPosition";
+import type { PitchResult } from "../domain/types";
+
+// Caps unbounded growth over a long practice session; oldest entries drop off.
+const MAX_TRANSCRIPT_ENTRIES = 500;
 
 export interface SongWorkspaceParams {
   songKey: string;
@@ -31,8 +37,10 @@ export class SongWorkspace {
   readonly pitchDetector: PitchDetector | null;
   readonly waveform: WaveformVisualizer | null;
   private readonly analyserNode: AnalyserNode | null;
+  private readonly transcriptLogger: NoteTranscriptLogger;
 
   private memoText = "";
+  private transcript: TranscriptEntry[] = [];
   private updatedAt = 0;
 
   constructor({ songKey, sourceType, source }: SongWorkspaceParams) {
@@ -40,6 +48,21 @@ export class SongWorkspace {
     this.sourceType = sourceType;
     this.source = source;
     this.loopEditor.attach(source);
+
+    // Auto-logs held notes as you play — see noteTranscriptLogger.ts. Saves immediately so a
+    // session isn't lost if the user never presses the manual Save button (the whole point was
+    // that typing along is too fast — see requirements.md Change Log).
+    this.transcriptLogger = new NoteTranscriptLogger((noteName, frequencyHz) => {
+      const position = primaryPositionForFrequency(frequencyHz);
+      const entry: TranscriptEntry = {
+        time: this.source.getCurrentTime(),
+        note: noteName,
+        position: position ? formatPosition(position) : "",
+      };
+      this.transcript = [...this.transcript, entry].slice(-MAX_TRANSCRIPT_ENTRIES);
+      this.updatedAt = Date.now();
+      saveSongState(this.exportState());
+    });
 
     if (sourceType === "local") {
       const engine = source as LocalAudioEngine;
@@ -77,6 +100,22 @@ export class SongWorkspace {
     return this.analyserNode;
   }
 
+  // Feeds the live pitch-detector stream in (see PitchDisplay.tsx) so held notes get logged.
+  observePitch(pitch: PitchResult): void {
+    this.transcriptLogger.observe(pitch);
+  }
+
+  getTranscript(): TranscriptEntry[] {
+    return this.transcript;
+  }
+
+  clearTranscript(): void {
+    this.transcript = [];
+    this.transcriptLogger.reset();
+    this.updatedAt = Date.now();
+    saveSongState(this.exportState());
+  }
+
   getMemoText(): string {
     return this.memoText;
   }
@@ -96,6 +135,7 @@ export class SongWorkspace {
       songKey: this.songKey,
       loopPoints: points ? { a: points.a, b: points.b, enabled: true } : null,
       memo: this.memoText ? { text: this.memoText, updatedAt: this.updatedAt } : null,
+      transcript: this.transcript,
       updatedAt: this.updatedAt || Date.now(),
     };
   }
@@ -109,6 +149,8 @@ export class SongWorkspace {
     if (state.memo) {
       this.memoText = state.memo.text;
     }
+    // Older saved states (before this feature) have no transcript field.
+    this.transcript = state.transcript ?? [];
     this.updatedAt = state.updatedAt;
   }
 

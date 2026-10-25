@@ -441,3 +441,27 @@
 **Context**: Pitch detection fix + full visual redesign, ready to commit
 
 ---
+
+## Feature Request: Chord Analysis + Auto-Transcription to Tab
+**Timestamp**: 2026-10-25T12:36:41Z
+**User Input**: "リアルタイム・ピッチ検出：鳴っている音の周波数を解析し、「ドレミ（音名）」を即座に表示。コード解析機能：単音だけでなく、直近の音の重なりから「今はCメジャーかな？Amかな？」とコードを推測。ギタリスト・ベーシストに嬉しい「タブ譜表示」：検出した音が「ギターの何弦の何フレットか」を視覚的に表示する機能。メモを自分で書くんじゃなくて、採譜してほしいんだけど。"
+**AI Response**: "Assessed feasibility honestly before building anything: (1) real-time note name — already exists. (2) string/fret position — fully feasible, pure music theory, high confidence. (3) chord detection from simultaneous notes — feasible but low-confidence on a full mix, would be 'reference only'. (4) full automatic song transcription into tab notation — explained as not realistically achievable at this project's scale (same class of problem as professional transcription software using dedicated ML/source-separation models). Proposed scoping to (1)+(2)+(3) with honest caveats, asked for confirmation."
+**Context**: Feasibility assessment presented before implementation, avoiding a repeat of the earlier pitch-detection overpromise
+
+---
+
+## Feature Request - Scope Clarified
+**Timestamp**: 2026-10-25T12:36:41Z
+**User Input**: Selected "Other" on the scope question with clarification: "リアルタイムに出したものをメモとして残してほしいんだけど。早すぎてメモできないでしょ。" (wants detected notes auto-logged as a record, since playing is too fast to type along to manually)
+**AI Response**: "Recognized this is NOT full polyphonic song transcription (which remains out of scope) — it's auto-journaling the output of the already-working monophonic pitch detector into a timestamped log, which is straightforward and high-confidence. Scoped to: (1) string/fret display (feasible, implemented), (2) auto-logged 'transcript' of held notes with debouncing (feasible, implemented), deferring chord detection as a separate follow-up not yet confirmed."
+**Context**: Scope negotiation resolved into an achievable, honest feature set
+
+---
+
+## Feature Implementation: String/Fret Position + Auto Transcript Log
+**Timestamp**: 2026-10-25T12:36:41Z
+**User Input**: N/A (synthesis step)
+**AI Response**: "Added src/logic/bassPosition.ts (pure music-theory mapping: detected frequency -> MIDI number -> valid (string, fret) positions on standard 4-string E-A-D-G tuning within 12 frets, lowest-fret position chosen as the default suggestion) and src/logic/noteTranscriptLogger.ts (debounces the ~15Hz pitch-detection stream into 'note held for ~200ms' events, one log entry per note change, not per detection tick). Extended domain/types.ts (TranscriptEntry, SongWorkspaceState.transcript with backward-compatible `?? []` on import for old saved states). SongWorkspace now owns the NoteTranscriptLogger instance, auto-saves to localStorage on every new transcript entry (not just on manual Save, since the whole point was 'too fast to save manually'), and exposes observePitch()/getTranscript()/clearTranscript(). New TranscriptLog.tsx component (scrollable timestamped list, 'メモにコピー' to merge into the manual memo field, 'クリア' to reset) wired into PlayerScreen. PitchDisplay now also shows the string/fret readout and forwards pitch updates via a new onPitchUpdate prop. Added 14 new tests (bassPosition.test.ts: Oracle comparison against known open-string frequencies + PBT invariant that all returned positions stay within [0, MAX_FRET]; noteTranscriptLogger.test.ts: stability-count gating, no duplicate logging while sustained, re-logs on note change, resets on silence, reset() behavior). Verified: tsc clean, vitest 52/52 passing (12 files), build succeeds, npm audit 0 vulnerabilities. Browser-smoke-tested the empty-state Transcript panel renders correctly (live audio detection itself can't be verified in the sandboxed headless browser — same known limitation as before). Updated requirements.md Change Log and frontend/README.md, explicitly documenting chord detection and full auto-transcription as out of scope."
+**Context**: Feature complete, ready to commit
+
+---

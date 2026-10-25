@@ -423,6 +423,30 @@ input[type="range"].fader::-moz-range-thumb {
   background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 8px);
 }
 
+/* ---------- Transcript log (auto-recorded notes) ---------- */
+
+.transcript-log__list {
+  max-height: 180px;
+  overflow-y: auto;
+  background: var(--groove);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 4px 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) inset;
+}
+
+.transcript-log__row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--panel-edge);
+}
+
+.transcript-log__row:last-child {
+  border-bottom: none;
+}
+
 /* ---------- Memo textarea ---------- */
 
 .memo-textarea {

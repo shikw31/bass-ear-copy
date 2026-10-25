@@ -13,8 +13,13 @@ const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", 
 const A4_FREQUENCY_HZ = 440;
 const A4_MIDI_NUMBER = 69;
 
+// Shared with bassPosition.ts (fret-position math needs the same equal-temperament reference).
+export function frequencyToMidiNumber(frequencyHz: number): number {
+  return Math.round(12 * Math.log2(frequencyHz / A4_FREQUENCY_HZ) + A4_MIDI_NUMBER);
+}
+
 export function frequencyToNoteName(frequencyHz: number): string {
-  const midiNumber = Math.round(12 * Math.log2(frequencyHz / A4_FREQUENCY_HZ) + A4_MIDI_NUMBER);
+  const midiNumber = frequencyToMidiNumber(frequencyHz);
   const noteName = NOTE_NAMES[((midiNumber % 12) + 12) % 12];
   const octave = Math.floor(midiNumber / 12) - 1;
   return `${noteName}${octave}`;

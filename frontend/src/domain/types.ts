@@ -23,10 +23,19 @@ export interface Memo {
   updatedAt: number;
 }
 
+// Auto-logged from the live pitch detector (see logic/noteTranscriptLogger.ts) — the user asked
+// for notes to be recorded automatically because playing is too fast to type along to.
+export interface TranscriptEntry {
+  time: number;
+  note: string;
+  position: string;
+}
+
 export interface SongWorkspaceState {
   songKey: string;
   loopPoints: LoopPoints | null;
   memo: Memo | null;
+  transcript: TranscriptEntry[];
   updatedAt: number;
 }
 

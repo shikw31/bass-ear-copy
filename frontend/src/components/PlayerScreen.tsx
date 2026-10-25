@@ -1,4 +1,5 @@
 import type { SongWorkspace } from "../services/songWorkspace";
+import type { PitchResult, TranscriptEntry } from "../domain/types";
 import { TransportControls } from "./TransportControls";
 import { SpeedControl } from "./SpeedControl";
 import { EQControl } from "./EQControl";
@@ -6,6 +7,7 @@ import { LoopControls } from "./LoopControls";
 import { PitchDisplay } from "./PitchDisplay";
 import { WaveformCanvas } from "./WaveformCanvas";
 import { MemoEditor } from "./MemoEditor";
+import { TranscriptLog } from "./TranscriptLog";
 import { SaveStatusIndicator } from "./SaveStatusIndicator";
 import { useState } from "react";
 
@@ -16,6 +18,8 @@ interface Props {
 
 export function PlayerScreen({ workspace, onError }: Props) {
   const [saved, setSaved] = useState(false);
+  const [memoVersion, setMemoVersion] = useState(0);
+  const [transcript, setTranscript] = useState<TranscriptEntry[]>(workspace.getTranscript());
   const capabilities = workspace.source.getCapabilities();
   const isMic = workspace.sourceType === "mic";
 
@@ -43,6 +47,28 @@ export function PlayerScreen({ workspace, onError }: Props) {
     } else if ("setPlaybackRate" in workspace.source) {
       (workspace.source as unknown as { setPlaybackRate(rate: number): void }).setPlaybackRate(rate);
     }
+  }
+
+  function handlePitchUpdate(pitch: PitchResult) {
+    workspace.observePitch(pitch);
+    setTranscript(workspace.getTranscript());
+  }
+
+  function handleClearTranscript() {
+    workspace.clearTranscript();
+    setTranscript(workspace.getTranscript());
+  }
+
+  function handleCopyTranscriptToMemo(transcriptText: string) {
+    const existing = workspace.getMemoText();
+    const combined = existing ? `${existing}\n\n— 採譜ログ —\n${transcriptText}` : `— 採譜ログ —\n${transcriptText}`;
+    const result = workspace.setMemoText(combined);
+    if (!result.valid) {
+      onError(result.error);
+      return;
+    }
+    handleSave();
+    setMemoVersion((v) => v + 1);
   }
 
   return (
@@ -93,7 +119,7 @@ export function PlayerScreen({ workspace, onError }: Props) {
           <span className="panel__label">Tuner / Scope</span>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {capabilities.supportsPitchDisplay && workspace.pitchDetector && (
-              <PitchDisplay pitchDetector={workspace.pitchDetector} />
+              <PitchDisplay pitchDetector={workspace.pitchDetector} onPitchUpdate={handlePitchUpdate} />
             )}
             {capabilities.supportsWaveform && workspace.waveform && workspace.getAnalyserNode() && (
               <WaveformCanvas waveformVisualizer={workspace.waveform} analyserNode={workspace.getAnalyserNode()!} />
@@ -102,9 +128,16 @@ export function PlayerScreen({ workspace, onError }: Props) {
         </div>
       )}
 
+      {capabilities.supportsPitchDisplay && (
+        <div className="panel">
+          <span className="panel__label">Transcript</span>
+          <TranscriptLog entries={transcript} onClear={handleClearTranscript} onCopyToMemo={handleCopyTranscriptToMemo} />
+        </div>
+      )}
+
       <div className="panel">
         <span className="panel__label">Notes</span>
-        <MemoEditor initialText={workspace.getMemoText()} onCommit={handleMemoCommit} />
+        <MemoEditor key={memoVersion} initialText={workspace.getMemoText()} onCommit={handleMemoCommit} />
         <div className="panel__row" style={{ marginTop: 12 }}>
           <button type="button" className="btn btn--accent" data-testid="player-screen-save-button" onClick={handleSave}>
             保存
