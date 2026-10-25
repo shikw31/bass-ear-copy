@@ -425,3 +425,19 @@
 **Context**: Feature complete, ready to commit
 
 ---
+
+## Feedback: Mic UX Two-Step Flow Confusing
+**Timestamp**: 2026-10-25T11:14:31Z
+**User Input**: "マイク入力したうえで再生をするってこと？UIがクソすぎて使い方がわからないよ"
+**AI Response**: "Acknowledged directly. Added TransportControls autoPlay/playLabel/pauseLabel props; mic monitoring now starts automatically on open instead of requiring a separate play press. Mic-specific labels ('モニター開始/停止') and an on-screen hint added. Verified tsc clean, 38/38 tests passing. Sandbox re-test of the real getUserMedia flow was unreliable (hung this time vs. erroring last time) — told user this is an environment limitation, asked them to verify in their own browser."
+**Context**: UX fix for mic input flow
+
+---
+
+## Feedback: Pitch Display Not Showing + UI Quality Complaint
+**Timestamp**: 2026-10-25T11:14:31Z
+**User Input**: "試してみたけど、結局リアルタイムでどの音がなってるかとかでないし、シンプル全体的にUIがクソ。"
+**AI Response**: "Two separate root causes addressed: (1) Pitch detection was analyzing the same gently-EQ'd signal used for listening, which a full band mix (drums/vocals/guitar) swamps for monophonic detection — added a dedicated ~250Hz lowpass + larger-FFT analyser branch (LocalAudioEngine and MicrophoneInputSource) feeding only the PitchDetector, and lowered CONFIDENCE_THRESHOLD 0.8->0.6. Documented as improved-but-not-perfect (full-mix pitch detection has inherent limits). (2) Visual design: the app had zero styling (bare HTML). Invoked the frontend-design skill and built a full dark 'studio rack unit / DI box' visual identity (src/styles.css: CSS-variable theme, panel sections with nameplate labels, fader-styled range inputs, toggle switch, LED indicators, oscilloscope-styled waveform canvas) using Zen Kaku Gothic New (UI text) and DotGothic16 (dot-matrix LED-style numeric readouts) from Google Fonts. Restyled every component (App, InputScreen, PlayerScreen, TransportControls, SpeedControl, EQControl, LoopControls, PitchDisplay, WaveformCanvas, MemoEditor, SaveStatusIndicator, ErrorToast, GlobalErrorBoundary) via className additions only — no data-testid or text-content changes, all 38 existing tests still pass unmodified. Verified visually via chrome-devtools MCP screenshots at mobile (420px) and desktop (1280px) widths — cohesive, legible, cross-width. Updated requirements.md changelog and README."
+**Context**: Pitch detection fix + full visual redesign, ready to commit
+
+---

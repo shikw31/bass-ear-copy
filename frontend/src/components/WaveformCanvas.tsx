@@ -25,8 +25,16 @@ export function WaveformCanvas({ waveformVisualizer, analyserNode }: Props) {
 
   return (
     <div data-testid="waveform-canvas">
-      <canvas ref={canvasRef} width={480} height={120} data-testid="waveform-canvas-element" />
-      <button type="button" data-testid="waveform-canvas-mode-toggle-button" onClick={toggleMode}>
+      <div className="scope">
+        <canvas ref={canvasRef} width={480} height={120} data-testid="waveform-canvas-element" />
+      </div>
+      <button
+        type="button"
+        className="btn btn--ghost"
+        data-testid="waveform-canvas-mode-toggle-button"
+        onClick={toggleMode}
+        style={{ marginTop: 8, fontSize: "0.72rem", padding: "6px 10px" }}
+      >
         表示切替（{mode === "waveform" ? "波形" : "スペクトログラム"}）
       </button>
     </div>

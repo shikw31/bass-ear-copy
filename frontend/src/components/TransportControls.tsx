@@ -47,27 +47,36 @@ export function TransportControls({
   }
 
   return (
-    <div data-testid="transport-controls">
-      <button type="button" data-testid="transport-controls-play-pause-button" onClick={togglePlay}>
-        {isPlaying ? pauseLabel : playLabel}
+    <div className="panel__row" data-testid="transport-controls">
+      <button
+        type="button"
+        className={isPlaying ? "btn btn--accent" : "btn"}
+        data-testid="transport-controls-play-pause-button"
+        onClick={togglePlay}
+      >
+        {isPlaying ? `⏸ ${pauseLabel}` : `▶ ${playLabel}`}
       </button>
       {hasDuration ? (
         <>
           <input
             type="range"
+            className="fader"
             min={0}
             max={duration}
             step={0.1}
             value={currentTime}
             data-testid="transport-controls-seek-bar"
             onChange={(e) => playbackSource.seek(Number(e.target.value))}
+            style={{ flex: 1, minWidth: 90 }}
           />
-          <span data-testid="transport-controls-time-label">
+          <span className="readout readout--sm transport__clock" data-testid="transport-controls-time-label">
             {currentTime.toFixed(1)} / {duration.toFixed(1)}秒
           </span>
         </>
       ) : (
-        <span data-testid="transport-controls-time-label">{currentTime.toFixed(1)}秒</span>
+        <span className="readout readout--sm transport__clock" data-testid="transport-controls-time-label">
+          {currentTime.toFixed(1)}秒
+        </span>
       )}
     </div>
   );

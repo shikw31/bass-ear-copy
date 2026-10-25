@@ -14,10 +14,16 @@ export function SpeedControl({ onRateChange }: Props) {
   }
 
   return (
-    <div data-testid="speed-control">
-      <label htmlFor="speed-control-slider">再生速度（音程保持）</label>
+    <div className="fader-field" data-testid="speed-control">
+      <div className="fader-field__top">
+        <label htmlFor="speed-control-slider">速度（音程保持）</label>
+        <span className="readout readout--sm readout--teal" data-testid="speed-control-value-label">
+          {rate.toFixed(2)}x
+        </span>
+      </div>
       <input
         id="speed-control-slider"
+        className="fader"
         type="range"
         min={MIN_PLAYBACK_RATE}
         max={MAX_PLAYBACK_RATE}
@@ -26,7 +32,6 @@ export function SpeedControl({ onRateChange }: Props) {
         data-testid="speed-control-slider"
         onChange={(e) => handleChange(Number(e.target.value))}
       />
-      <span data-testid="speed-control-value-label">{rate.toFixed(2)}x</span>
     </div>
   );
 }

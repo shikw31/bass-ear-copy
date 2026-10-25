@@ -24,8 +24,8 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div role="alert" data-testid="global-error-boundary-message">
-          予期しないエラーが発生しました。ページを再読み込みしてください。
+        <div className="rack" role="alert" data-testid="global-error-boundary-message">
+          <div className="boundary-fallback">予期しないエラーが発生しました。ページを再読み込みしてください。</div>
         </div>
       );
     }

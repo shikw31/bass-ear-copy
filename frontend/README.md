@@ -1,6 +1,8 @@
-# 耳コピ補助アプリ — Frontend Web App
+# 耳コピDI — Frontend Web App
 
 ベース練習の耳コピを補助するWebアプリ。React + TypeScript + Vite。ログイン不要、ブラウザのローカルストレージのみで動作する単体のWebアプリ（バックエンド不要）。
+
+見た目はスタジオ機材（ラックユニット/DIボックス）をモチーフにしたダークテーマ。各機能はパネルセクション（TRANSPORT / TONE / LOOP / TUNER・SCOPE / NOTES）に分かれ、数値表示はドットマトリクス風のLED表示（`src/styles.css`）。
 
 ## セットアップ
 

@@ -15,10 +15,17 @@ export function EQControl({ eqProcessor }: Props) {
   }
 
   return (
-    <div data-testid="eq-control">
-      <label htmlFor="eq-control-slider">低音域強調EQ</label>
+    <div className="fader-field" data-testid="eq-control">
+      <div className="fader-field__top">
+        <label htmlFor="eq-control-slider">低音域ブースト（〜100Hz）</label>
+        <span className="readout" data-testid="eq-control-value-label">
+          {gainDb > 0 ? "+" : ""}
+          {gainDb.toFixed(1)}dB
+        </span>
+      </div>
       <input
         id="eq-control-slider"
+        className="fader"
         type="range"
         min={EQ_MIN_GAIN_DB}
         max={EQ_MAX_GAIN_DB}
@@ -27,7 +34,6 @@ export function EQControl({ eqProcessor }: Props) {
         data-testid="eq-control-slider"
         onChange={(e) => handleChange(Number(e.target.value))}
       />
-      <span data-testid="eq-control-value-label">{gainDb.toFixed(1)}dB</span>
     </div>
   );
 }

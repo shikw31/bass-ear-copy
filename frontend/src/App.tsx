@@ -33,21 +33,30 @@ export function App() {
   }
 
   return (
-    <div data-testid="app-root">
-      <div
-        ref={youtubeContainerRef}
-        data-testid="youtube-player-container"
-        style={{ display: workspace?.sourceType === "youtube" ? "block" : "none" }}
-      />
-      {!workspace && (
-        <InputScreen
-          onOpenLocalFile={handleOpenInput}
-          onOpenYouTubeUrl={handleOpenInput}
-          onOpenMicInput={handleOpenMicInput}
-          onError={setErrorMessage}
+    <div className="rack" data-testid="app-root">
+      <div className="rack__nameplate">
+        <div className="rack__title">
+          耳コピDI
+          <small>EAR-COPY DIRECT INPUT</small>
+        </div>
+        <span className={workspace ? "led led--amber" : "led"} aria-hidden="true" />
+      </div>
+      <div className="rack__body">
+        <div
+          ref={youtubeContainerRef}
+          data-testid="youtube-player-container"
+          style={{ display: workspace?.sourceType === "youtube" ? "block" : "none" }}
         />
-      )}
-      {workspace && <PlayerScreen workspace={workspace} onError={setErrorMessage} />}
+        {!workspace && (
+          <InputScreen
+            onOpenLocalFile={handleOpenInput}
+            onOpenYouTubeUrl={handleOpenInput}
+            onOpenMicInput={handleOpenMicInput}
+            onError={setErrorMessage}
+          />
+        )}
+        {workspace && <PlayerScreen workspace={workspace} onError={setErrorMessage} />}
+      </div>
       <ErrorToast message={errorMessage} onDismiss={() => setErrorMessage(null)} />
     </div>
   );

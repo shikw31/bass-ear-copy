@@ -26,40 +26,66 @@ export function InputScreen({ onOpenLocalFile, onOpenYouTubeUrl, onOpenMicInput,
 
   return (
     <div data-testid="input-screen">
-      <section>
-        <label htmlFor="input-screen-file-input">音声ファイルを開く（mp3/wav/m4a）</label>
-        <input
-          id="input-screen-file-input"
-          ref={fileInputRef}
-          type="file"
-          accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4"
-          data-testid="input-screen-file-input"
-          onChange={handleFileChange}
-        />
-      </section>
-      <section>
-        <label htmlFor="input-screen-youtube-url-input">YouTube URLを開く</label>
-        <input
-          id="input-screen-youtube-url-input"
-          type="text"
-          placeholder="https://www.youtube.com/watch?v=..."
-          data-testid="input-screen-youtube-url-input"
-          value={youtubeUrl}
-          onChange={(e) => setYoutubeUrl(e.target.value)}
-        />
-        <button type="button" data-testid="input-screen-youtube-submit-button" onClick={handleYoutubeSubmit}>
-          読み込む
-        </button>
-      </section>
-      <section>
-        <p>
-          マイク入力（YouTube等を別端末で再生しつつ、低音域EQ・音程表示・波形表示を使いたい場合。<strong>ヘッドホン推奨</strong>
-          — スピーカーだとマイクが音を拾って発生するハウリングの原因になります）
+      <div className="panel">
+        <span className="panel__label">Source 1 / File</span>
+        <label className="field-label" htmlFor="input-screen-file-input">
+          音声ファイルを開く（mp3 / wav / m4a）
+        </label>
+        <div className="file-input-wrap">
+          <input
+            id="input-screen-file-input"
+            ref={fileInputRef}
+            type="file"
+            accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4"
+            data-testid="input-screen-file-input"
+            onChange={handleFileChange}
+          />
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 16 }}>
+        <span className="panel__label">Source 2 / YouTube</span>
+        <label className="field-label" htmlFor="input-screen-youtube-url-input">
+          YouTube URLを開く
+        </label>
+        <div className="panel__row">
+          <input
+            id="input-screen-youtube-url-input"
+            className="text-input"
+            type="text"
+            placeholder="https://www.youtube.com/watch?v=..."
+            data-testid="input-screen-youtube-url-input"
+            value={youtubeUrl}
+            onChange={(e) => setYoutubeUrl(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn btn--accent"
+            data-testid="input-screen-youtube-submit-button"
+            onClick={handleYoutubeSubmit}
+          >
+            読み込む
+          </button>
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 16 }}>
+        <span className="panel__label">Source 3 / Mic Line-In</span>
+        <p className="panel__hint">
+          YouTube等を別端末で再生しつつ、マイク経由で低音域EQ・音程表示・波形表示を使いたい場合。
+          <strong style={{ color: "var(--amber)" }}> ヘッドホン推奨</strong>
+          — スピーカーだとマイクが音を拾ってハウリングします。
         </p>
-        <button type="button" data-testid="input-screen-mic-input-button" onClick={onOpenMicInput}>
+        <button
+          type="button"
+          className="btn btn--block"
+          data-testid="input-screen-mic-input-button"
+          onClick={onOpenMicInput}
+          style={{ marginTop: 10 }}
+        >
           マイク入力を開始
         </button>
-      </section>
+      </div>
     </div>
   );
 }

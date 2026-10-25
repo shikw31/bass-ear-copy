@@ -1,0 +1,588 @@
+/* ============================================================
+   耳コピDI — hardware-rack-unit visual language.
+   The whole app is styled as a single piece of outboard studio
+   gear: brushed-panel sections with nameplate labels, fader-style
+   range inputs, and an amber LED readout face for live numbers
+   (Hz / dB / note names / timers) — DotGothic16 deliberately reads
+   like a dot-matrix tuner display.
+   ============================================================ */
+
+:root {
+  --void: #0a0b0d;
+  --panel: #1b1e21;
+  --panel-raised: #242830;
+  --panel-edge: #353b42;
+  --groove: #0d0f11;
+  --text: #ece6d8;
+  --text-dim: #8d949b;
+  --amber: #ffa63d;
+  --amber-soft: rgba(255, 166, 61, 0.35);
+  --teal: #39d6c6;
+  --red: #ff5a5f;
+
+  --font-display: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", sans-serif;
+  --font-readout: "DotGothic16", "Zen Kaku Gothic New", monospace;
+
+  color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, #1a1d22 0%, var(--void) 55%), var(--void);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: clamp(12px, 4vw, 48px) 16px;
+}
+
+/* Fine film-grain speckle, purely decorative, kept very subtle. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(circle at 20% 30%, #fff 0.5px, transparent 0.5px),
+    radial-gradient(circle at 70% 65%, #fff 0.5px, transparent 0.5px),
+    radial-gradient(circle at 45% 85%, #fff 0.5px, transparent 0.5px);
+  background-size: 7px 7px, 11px 11px, 5px 5px;
+}
+
+#root {
+  width: 100%;
+  max-width: 520px;
+}
+
+h1,
+h2,
+h3,
+p,
+ul {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ---------- App shell: the "rack unit" chassis ---------- */
+
+.rack {
+  position: relative;
+  background: linear-gradient(180deg, #202428 0%, var(--panel) 12%, var(--panel) 100%);
+  border: 1px solid var(--panel-edge);
+  border-radius: 14px;
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.75),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.6) inset;
+  overflow: hidden;
+}
+
+.rack__nameplate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 18px;
+  background: repeating-linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.025) 0px,
+    rgba(255, 255, 255, 0.025) 1px,
+    transparent 1px,
+    transparent 5px
+  );
+  border-bottom: 1px solid var(--panel-edge);
+}
+
+.rack__title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.rack__title small {
+  display: block;
+  font-weight: 500;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.led {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4) inset;
+  flex-shrink: 0;
+}
+
+.led--amber {
+  background: var(--amber);
+  box-shadow: 0 0 8px 2px var(--amber-soft);
+  animation: led-pulse 1.6s ease-in-out infinite;
+}
+
+.led--red {
+  background: var(--red);
+  box-shadow: 0 0 8px 2px rgba(255, 90, 95, 0.45);
+  animation: led-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes led-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.rack__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- Panel sections (each control group) ---------- */
+
+.panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 40%), var(--panel-raised);
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  padding: 22px 16px 16px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 16px -10px rgba(0, 0, 0, 0.6);
+}
+
+.panel__label {
+  position: absolute;
+  top: -9px;
+  left: 14px;
+  background: var(--void);
+  border: 1px solid var(--panel-edge);
+  color: var(--amber);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.panel + .panel {
+  margin-top: 0;
+}
+
+.panel__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panel__row + .panel__row {
+  margin-top: 14px;
+}
+
+.panel__hint {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* ---------- Readouts (LED/tuner-style numbers) ---------- */
+
+.readout {
+  font-family: var(--font-readout);
+  color: var(--amber);
+  text-shadow: 0 0 6px var(--amber-soft);
+  letter-spacing: 0.04em;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.readout--idle {
+  color: var(--text-dim);
+  text-shadow: none;
+}
+
+.readout--sm {
+  font-size: 0.85rem;
+}
+
+.readout--teal {
+  color: var(--teal);
+  text-shadow: 0 0 6px rgba(57, 214, 198, 0.35);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: linear-gradient(180deg, #2c3138, #202428);
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+}
+
+.btn:hover {
+  background: linear-gradient(180deg, #333941, #262b31);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 0px 0 rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn--accent {
+  background: linear-gradient(180deg, #ffb75e, var(--amber));
+  color: #241502;
+  border-color: #c97d1f;
+}
+
+.btn--accent:hover {
+  background: linear-gradient(180deg, #ffc477, #ffac4a);
+}
+
+.btn--block {
+  width: 100%;
+  text-align: center;
+}
+
+.btn--ghost {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ---------- Transport ---------- */
+
+.transport__clock {
+  margin-left: auto;
+}
+
+/* ---------- Fader-style range inputs ---------- */
+
+.fader-field {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fader-field__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+input[type="range"].fader {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"].fader::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--groove), #16181a);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 -1px 2px rgba(0, 0, 0, 0.6) inset;
+}
+
+input[type="range"].fader::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffd08a, var(--amber) 55%, #c97d1f);
+  border: 1px solid #8f5916;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+input[type="range"].fader::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--groove), #16181a);
+}
+
+input[type="range"].fader::-moz-range-thumb {
+  width: 16px;
+  height: 20px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffd08a, var(--amber) 55%, #c97d1f);
+  border: 1px solid #8f5916;
+}
+
+/* ---------- Toggle switch (loop on/off) ---------- */
+
+.toggle {
+  position: relative;
+  width: 46px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--groove);
+  border: 1px solid var(--panel-edge);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) inset;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #e7e2d6, #b9b3a4);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: left 0.15s ease;
+}
+
+.toggle[data-on="true"] {
+  background: linear-gradient(180deg, #2a6b61, #1d4a43);
+}
+
+.toggle[data-on="true"]::after {
+  left: 24px;
+  background: linear-gradient(180deg, #d6fff5, var(--teal));
+}
+
+.toggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- Oscilloscope-style waveform canvas ---------- */
+
+.scope {
+  position: relative;
+  border-radius: 6px;
+  background: var(--groove);
+  border: 1px solid var(--panel-edge);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6) inset;
+  overflow: hidden;
+}
+
+.scope canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.scope::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 8px);
+}
+
+/* ---------- Memo textarea ---------- */
+
+.memo-textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  background: var(--groove);
+  color: var(--text);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) inset;
+}
+
+.memo-textarea:focus {
+  outline: 2px solid var(--amber-soft);
+  outline-offset: 1px;
+}
+
+/* ---------- Inputs (text / file) ---------- */
+
+.text-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--groove);
+  color: var(--text);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) inset;
+}
+
+.text-input:focus {
+  outline: 2px solid var(--amber-soft);
+  outline-offset: 1px;
+}
+
+.file-input-wrap {
+  display: block;
+}
+
+.file-input-wrap input[type="file"] {
+  display: block;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.file-input-wrap input[type="file"]::file-selector-button {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: linear-gradient(180deg, #2c3138, #202428);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* ---------- Field label ---------- */
+
+.field-label {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* ---------- Save status chip ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--teal);
+  background: rgba(57, 214, 198, 0.1);
+  border: 1px solid rgba(57, 214, 198, 0.35);
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+
+/* ---------- Error toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: min(92vw, 480px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a1414;
+  border: 1px solid #7a2e2e;
+  color: #ffd9d9;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.7);
+  font-size: 0.82rem;
+  z-index: 50;
+  animation: toast-in 0.2s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.toast button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ---------- Mic hint banner ---------- */
+
+.mic-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 90, 95, 0.08);
+  border: 1px solid rgba(255, 90, 95, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.76rem;
+  color: var(--text);
+}
+
+/* ---------- Error boundary fallback ---------- */
+
+.boundary-fallback {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 420px) {
+  .rack__title {
+    font-size: 0.92rem;
+  }
+}

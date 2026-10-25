@@ -36,12 +36,14 @@ export class WaveformVisualizer {
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "#3b7a57";
-    ctx.lineWidth = 2;
 
     if (this.mode === "waveform") {
       const data = new Float32Array(analyser.fftSize);
       analyser.getFloatTimeDomainData(data);
+      ctx.strokeStyle = "#ffa63d";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "rgba(255, 166, 61, 0.55)";
+      ctx.shadowBlur = 6;
       ctx.beginPath();
       for (let i = 0; i < data.length; i++) {
         const x = (i / data.length) * canvas.width;
@@ -50,14 +52,16 @@ export class WaveformVisualizer {
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
+      ctx.shadowBlur = 0;
     } else {
       const freqData = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(freqData);
       const barWidth = canvas.width / freqData.length;
       for (let i = 0; i < freqData.length; i++) {
         const barHeight = (freqData[i] / 255) * canvas.height;
-        ctx.fillStyle = "#3b7a57";
-        ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth, barHeight);
+        const t = freqData[i] / 255;
+        ctx.fillStyle = t > 0.75 ? "#39d6c6" : "#ffa63d";
+        ctx.fillRect(i * barWidth, canvas.height - barHeight, Math.max(1, barWidth - 1), barHeight);
       }
     }
   }
