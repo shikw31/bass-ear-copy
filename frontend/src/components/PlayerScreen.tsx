@@ -17,6 +17,7 @@ interface Props {
 export function PlayerScreen({ workspace, onError }: Props) {
   const [saved, setSaved] = useState(false);
   const capabilities = workspace.source.getCapabilities();
+  const isMic = workspace.sourceType === "mic";
 
   function handleSave() {
     try {
@@ -46,7 +47,17 @@ export function PlayerScreen({ workspace, onError }: Props) {
 
   return (
     <div data-testid="player-screen">
-      <TransportControls playbackSource={workspace.source} />
+      {isMic && (
+        <p data-testid="player-screen-mic-hint">
+          マイクでモニター中です。別の端末でYouTube等を再生してください（ヘッドホン推奨）。
+        </p>
+      )}
+      <TransportControls
+        playbackSource={workspace.source}
+        autoPlay={isMic}
+        playLabel={isMic ? "モニター開始" : undefined}
+        pauseLabel={isMic ? "モニター停止" : undefined}
+      />
       {capabilities.supportsSpeedChange && <SpeedControl onRateChange={handleRateChange} />}
       {capabilities.supportsEQ && workspace.eq && <EQControl eqProcessor={workspace.eq} />}
       {capabilities.supportsLoop && (

@@ -1,21 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PlaybackSource } from "../playback/playbackSource";
 
 interface Props {
   playbackSource: PlaybackSource;
+  autoPlay?: boolean;
+  playLabel?: string;
+  pauseLabel?: string;
 }
 
-export function TransportControls({ playbackSource }: Props) {
+export function TransportControls({
+  playbackSource,
+  autoPlay = false,
+  playLabel = "再生",
+  pauseLabel = "一時停止",
+}: Props) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const duration = playbackSource.getDuration();
   // No duration means a live source (e.g. microphone input) rather than a seekable track —
   // see microphoneInputSource.ts's getDuration().
   const hasDuration = Number.isFinite(duration) && duration > 0;
+  const hasAutoStarted = useRef(false);
 
   useEffect(() => {
     return playbackSource.onTimeUpdate(setCurrentTime);
   }, [playbackSource]);
+
+  // autoPlay exists for sources with no separate "load, then press play" step worth exposing
+  // (mic input: the "load" step already asked for permission, so a second manual play button
+  // was confusing — see conversation-log.md feedback). Runs once per mounted source.
+  useEffect(() => {
+    if (autoPlay && !hasAutoStarted.current) {
+      hasAutoStarted.current = true;
+      playbackSource.play();
+      setIsPlaying(true);
+    }
+  }, [autoPlay, playbackSource]);
 
   function togglePlay() {
     if (isPlaying) {
@@ -29,7 +49,7 @@ export function TransportControls({ playbackSource }: Props) {
   return (
     <div data-testid="transport-controls">
       <button type="button" data-testid="transport-controls-play-pause-button" onClick={togglePlay}>
-        {isPlaying ? "一時停止" : "再生"}
+        {isPlaying ? pauseLabel : playLabel}
       </button>
       {hasDuration ? (
         <>
