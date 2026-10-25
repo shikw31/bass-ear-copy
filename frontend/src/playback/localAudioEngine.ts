@@ -19,6 +19,7 @@ export class LocalAudioEngine implements PlaybackSource {
   private readonly audioContext: AudioContext;
   private readonly eqFilterNode: BiquadFilterNode;
   private readonly analyserNode: AnalyserNode;
+  private readonly pitchAnalyserNode: AnalyserNode;
   private readonly objectUrl: string;
   private loopPoints: { a: number; b: number } | null = null;
   private loopRafHandle: number | null = null;
@@ -40,9 +41,24 @@ export class LocalAudioEngine implements PlaybackSource {
     this.analyserNode = this.audioContext.createAnalyser();
     this.analyserNode.fftSize = 2048;
 
+    // Dedicated pitch-detection branch: a real song mix has drums/vocals/guitar on top of the
+    // bass, and monophonic pitch detection (pitchy) gets swamped by that if it sees the whole
+    // spectrum. A steep lowpass isolates the bass-ish band before analysis, separately from the
+    // gentle, user-controlled EQ (which shapes what you *hear*, not what the detector sees).
+    // fftSize 4096 (vs. 2048 for the waveform) gives ~93ms of signal at 44.1kHz — comfortably
+    // more than one full period even at the bottom of the bass band (~41Hz ≈ 24ms/cycle).
+    const pitchFilterNode = this.audioContext.createBiquadFilter();
+    pitchFilterNode.type = "lowpass";
+    pitchFilterNode.frequency.value = 250;
+    pitchFilterNode.Q.value = 1;
+    this.pitchAnalyserNode = this.audioContext.createAnalyser();
+    this.pitchAnalyserNode.fftSize = 4096;
+
     sourceNode.connect(this.eqFilterNode);
     this.eqFilterNode.connect(this.analyserNode);
     this.analyserNode.connect(this.audioContext.destination);
+    this.eqFilterNode.connect(pitchFilterNode);
+    pitchFilterNode.connect(this.pitchAnalyserNode);
 
     this.audioElement.addEventListener("timeupdate", () => {
       for (const cb of this.timeUpdateCallbacks) cb(this.audioElement.currentTime);
@@ -113,6 +129,10 @@ export class LocalAudioEngine implements PlaybackSource {
 
   getAnalyserNode(): AnalyserNode {
     return this.analyserNode;
+  }
+
+  getPitchAnalyserNode(): AnalyserNode {
+    return this.pitchAnalyserNode;
   }
 
   dispose(): void {

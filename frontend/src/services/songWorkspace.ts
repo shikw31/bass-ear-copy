@@ -48,8 +48,10 @@ export class SongWorkspace {
       this.timeStretch = new TimeStretchProcessor();
       this.timeStretch.attach(engine);
       this.analyserNode = engine.getAnalyserNode();
+      // Pitch detection uses its own steeply-filtered analyser (see localAudioEngine.ts), not
+      // the general one used for waveform/output — a full mix swamps monophonic detection.
       this.pitchDetector = new PitchDetector();
-      this.pitchDetector.attach(this.analyserNode);
+      this.pitchDetector.attach(engine.getPitchAnalyserNode());
       this.waveform = new WaveformVisualizer();
     } else if (sourceType === "mic") {
       // No transport to control (no speed change, no loop) — see capabilities.ts — but raw
@@ -60,7 +62,7 @@ export class SongWorkspace {
       this.timeStretch = null;
       this.analyserNode = mic.getAnalyserNode();
       this.pitchDetector = new PitchDetector();
-      this.pitchDetector.attach(this.analyserNode);
+      this.pitchDetector.attach(mic.getPitchAnalyserNode());
       this.waveform = new WaveformVisualizer();
     } else {
       this.eq = null;

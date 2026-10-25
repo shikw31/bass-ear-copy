@@ -16,6 +16,7 @@ export class MicrophoneInputSource implements PlaybackSource {
   private sourceNode: MediaStreamAudioSourceNode | null = null;
   private eqFilterNode: BiquadFilterNode | null = null;
   private analyserNode: AnalyserNode | null = null;
+  private pitchAnalyserNode: AnalyserNode | null = null;
   private startedAtMs = 0;
   private readonly timeUpdateCallbacks = new Set<(t: number) => void>();
   private timeUpdateHandle: ReturnType<typeof setInterval> | null = null;
@@ -38,9 +39,21 @@ export class MicrophoneInputSource implements PlaybackSource {
     this.analyserNode = this.audioContext.createAnalyser();
     this.analyserNode.fftSize = 2048;
 
+    // Dedicated pitch-detection branch — see localAudioEngine.ts for why (isolates the bass
+    // band from a full mix before monophonic pitch detection, separately from the user EQ).
+    const pitchFilterNode = this.audioContext.createBiquadFilter();
+    pitchFilterNode.type = "lowpass";
+    pitchFilterNode.frequency.value = 250;
+    pitchFilterNode.Q.value = 1;
+    this.pitchAnalyserNode = this.audioContext.createAnalyser();
+    this.pitchAnalyserNode.fftSize = 4096;
+
     this.sourceNode.connect(this.eqFilterNode);
     this.eqFilterNode.connect(this.analyserNode);
-    // Deliberately not connected to destination yet — nothing is monitored until play().
+    this.eqFilterNode.connect(pitchFilterNode);
+    pitchFilterNode.connect(this.pitchAnalyserNode);
+    // analyserNode is deliberately not connected to destination yet — nothing is monitored
+    // until play().
   }
 
   play(): void {
@@ -98,6 +111,11 @@ export class MicrophoneInputSource implements PlaybackSource {
   getAnalyserNode(): AnalyserNode {
     if (!this.analyserNode) throw new Error("MicrophoneInputSource.load() must be called first");
     return this.analyserNode;
+  }
+
+  getPitchAnalyserNode(): AnalyserNode {
+    if (!this.pitchAnalyserNode) throw new Error("MicrophoneInputSource.load() must be called first");
+    return this.pitchAnalyserNode;
   }
 
   dispose(): void {

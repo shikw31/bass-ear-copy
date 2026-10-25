@@ -5,7 +5,9 @@ import type { PitchResult } from "../domain/types";
 
 export const MIN_DETECTABLE_HZ = 41;
 export const MAX_DETECTABLE_HZ = 400;
-export const CONFIDENCE_THRESHOLD = 0.8;
+// 0.8 was too strict for real mixed audio (post-filtering clarity realistically lands lower
+// than for a clean isolated tone); lowered to stay responsive, trading a bit of certainty.
+export const CONFIDENCE_THRESHOLD = 0.6;
 
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const A4_FREQUENCY_HZ = 440;
