@@ -5,6 +5,7 @@ import { SpeedControl } from "./SpeedControl";
 import { EQControl } from "./EQControl";
 import { LoopControls } from "./LoopControls";
 import { PitchDisplay } from "./PitchDisplay";
+import { ChordDisplay } from "./ChordDisplay";
 import { WaveformCanvas } from "./WaveformCanvas";
 import { MemoEditor } from "./MemoEditor";
 import { TranscriptLog } from "./TranscriptLog";
@@ -20,8 +21,10 @@ export function PlayerScreen({ workspace, onError }: Props) {
   const [saved, setSaved] = useState(false);
   const [memoVersion, setMemoVersion] = useState(0);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>(workspace.getTranscript());
-  const capabilities = workspace.source.getCapabilities();
+  const [capabilities, setCapabilities] = useState(workspace.source.getCapabilities());
+  const [enablingAnalysis, setEnablingAnalysis] = useState(false);
   const isMic = workspace.sourceType === "mic";
+  const isYoutube = workspace.sourceType === "youtube";
 
   function handleSave() {
     try {
@@ -71,6 +74,23 @@ export function PlayerScreen({ workspace, onError }: Props) {
     setMemoVersion((v) => v + 1);
   }
 
+  async function handleEnableAnalysis() {
+    setEnablingAnalysis(true);
+    try {
+      await workspace.enableYoutubeAnalysis();
+      setCapabilities(workspace.source.getCapabilities());
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "タブ音声の共有に失敗しました");
+    } finally {
+      setEnablingAnalysis(false);
+    }
+  }
+
+  const showAnalysisPanel =
+    (capabilities.supportsPitchDisplay && workspace.pitchDetector) ||
+    (capabilities.supportsWaveform && workspace.waveform && workspace.getAnalyserNode()) ||
+    (capabilities.supportsChord && workspace.chordDetector);
+
   return (
     <div data-testid="player-screen" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {isMic && (
@@ -113,13 +133,27 @@ export function PlayerScreen({ workspace, onError }: Props) {
         </div>
       )}
 
-      {((capabilities.supportsPitchDisplay && workspace.pitchDetector) ||
-        (capabilities.supportsWaveform && workspace.waveform && workspace.getAnalyserNode())) && (
+      {isYoutube && !capabilities.supportsPitchDisplay && (
+        <div className="panel">
+          <span className="panel__label">Tuner / Scope</span>
+          <p className="panel__hint">
+            このタブの音声を共有すると、音程表示・波形表示・コード推測（参考）が使えるようになります（聞こえる音自体は変わりません。共有ダイアログで「このタブ」と「タブの音声を共有」を選んでください）。
+          </p>
+          <button type="button" className="btn" onClick={handleEnableAnalysis} disabled={enablingAnalysis}>
+            {enablingAnalysis ? "共有中…" : "タブの音声を解析用に共有"}
+          </button>
+        </div>
+      )}
+
+      {showAnalysisPanel && (
         <div className="panel">
           <span className="panel__label">Tuner / Scope</span>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {capabilities.supportsPitchDisplay && workspace.pitchDetector && (
               <PitchDisplay pitchDetector={workspace.pitchDetector} onPitchUpdate={handlePitchUpdate} />
+            )}
+            {capabilities.supportsChord && workspace.chordDetector && (
+              <ChordDisplay chordDetector={workspace.chordDetector} />
             )}
             {capabilities.supportsWaveform && workspace.waveform && workspace.getAnalyserNode() && (
               <WaveformCanvas waveformVisualizer={workspace.waveform} analyserNode={workspace.getAnalyserNode()!} />

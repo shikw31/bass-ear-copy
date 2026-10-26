@@ -60,6 +60,15 @@ export class YouTubePlayerAdapter implements PlaybackSource {
   private readonly timeUpdateCallbacks = new Set<(t: number) => void>();
   private timeUpdateIntervalHandle: number | null = null;
 
+  // Opt-in tab-audio capture for EQ/pitch/waveform/chord *analysis only* (see
+  // enableAnalysisCapture()) — never connected to an output, so it doesn't duplicate the tab's
+  // own already-audible playback.
+  private hasAnalysisCapture = false;
+  private analysisStream: MediaStream | null = null;
+  private analysisAudioContext: AudioContext | null = null;
+  private analyserNode: AnalyserNode | null = null;
+  private pitchAnalyserNode: AnalyserNode | null = null;
+
   constructor(container: HTMLElement, videoId: string) {
     this.container = container;
     this.videoId = videoId;
@@ -118,17 +127,71 @@ export class YouTubePlayerAdapter implements PlaybackSource {
   }
 
   getCapabilities(): PlaybackCapabilities {
-    return capabilitiesFor("youtube");
+    return capabilitiesFor("youtube", this.hasAnalysisCapture);
   }
 
   setPlaybackRate(rate: number): void {
     this.player?.setPlaybackRate(rate);
   }
 
+  // Opt-in: captures this browser tab's audio output (via the standard tab-sharing picker) for
+  // EQ/pitch/waveform/chord *analysis* — not to change what's heard, which remains impossible
+  // for the embedded player's own in-tab audio (see the project decision log: muting the
+  // original to substitute a processed copy just captures silence). The user must pick "this
+  // tab" and enable audio sharing in the browser's picker.
+  async enableAnalysisCapture(): Promise<void> {
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    } catch {
+      throw new Error("タブの共有がキャンセルされました");
+    }
+    // Video is required by the browser's tab-capture API but unused here — stop it immediately.
+    stream.getVideoTracks().forEach((track) => track.stop());
+    if (stream.getAudioTracks().length === 0) {
+      stream.getTracks().forEach((track) => track.stop());
+      throw new Error("タブの音声が共有されませんでした。共有時に「タブの音声を共有」を選択してください");
+    }
+
+    this.analysisStream = stream;
+    this.analysisAudioContext = new AudioContext();
+    const sourceNode = this.analysisAudioContext.createMediaStreamSource(stream);
+
+    this.analyserNode = this.analysisAudioContext.createAnalyser();
+    this.analyserNode.fftSize = 2048;
+
+    // Dedicated pitch-detection branch — see localAudioEngine.ts for the fftSize rationale.
+    const pitchFilterNode = this.analysisAudioContext.createBiquadFilter();
+    pitchFilterNode.type = "lowpass";
+    pitchFilterNode.frequency.value = 250;
+    pitchFilterNode.Q.value = 1;
+    this.pitchAnalyserNode = this.analysisAudioContext.createAnalyser();
+    this.pitchAnalyserNode.fftSize = 2048;
+
+    sourceNode.connect(this.analyserNode);
+    sourceNode.connect(pitchFilterNode);
+    pitchFilterNode.connect(this.pitchAnalyserNode);
+    // Deliberately never connected to analysisAudioContext.destination.
+
+    this.hasAnalysisCapture = true;
+  }
+
+  getAnalyserNode(): AnalyserNode {
+    if (!this.analyserNode) throw new Error("enableAnalysisCapture() must be called first");
+    return this.analyserNode;
+  }
+
+  getPitchAnalyserNode(): AnalyserNode {
+    if (!this.pitchAnalyserNode) throw new Error("enableAnalysisCapture() must be called first");
+    return this.pitchAnalyserNode;
+  }
+
   dispose(): void {
     this.stopLoopWatcher();
     if (this.timeUpdateIntervalHandle !== null) window.clearInterval(this.timeUpdateIntervalHandle);
     this.player?.destroy();
+    this.analysisStream?.getTracks().forEach((track) => track.stop());
+    void this.analysisAudioContext?.close();
   }
 
   private startLoopWatcher(): void {

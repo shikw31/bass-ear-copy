@@ -50,6 +50,7 @@ export interface PlaybackCapabilities {
   supportsEQ: boolean;
   supportsPitchDisplay: boolean;
   supportsWaveform: boolean;
+  supportsChord: boolean;
   supportsSpeedChange: boolean;
   supportsLoop: boolean;
   loopPrecision: "sample" | "approximate";

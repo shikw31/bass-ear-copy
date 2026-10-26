@@ -40,13 +40,14 @@ export class MicrophoneInputSource implements PlaybackSource {
     this.analyserNode.fftSize = 2048;
 
     // Dedicated pitch-detection branch — see localAudioEngine.ts for why (isolates the bass
-    // band from a full mix before monophonic pitch detection, separately from the user EQ).
+    // band from a full mix before monophonic pitch detection, separately from the user EQ) and
+    // for the fftSize 2048 rationale (time resolution for fast passages).
     const pitchFilterNode = this.audioContext.createBiquadFilter();
     pitchFilterNode.type = "lowpass";
     pitchFilterNode.frequency.value = 250;
     pitchFilterNode.Q.value = 1;
     this.pitchAnalyserNode = this.audioContext.createAnalyser();
-    this.pitchAnalyserNode.fftSize = 4096;
+    this.pitchAnalyserNode.fftSize = 2048;
 
     this.sourceNode.connect(this.eqFilterNode);
     this.eqFilterNode.connect(this.analyserNode);

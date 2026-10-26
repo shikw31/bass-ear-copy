@@ -3,15 +3,16 @@ import { BassEqProcessor } from "../playback/bassEqProcessor";
 import { TimeStretchProcessor } from "../playback/timeStretchProcessor";
 import { PitchDetector } from "../playback/pitchDetector";
 import { WaveformVisualizer } from "../playback/waveformVisualizer";
+import { ChordDetector } from "../playback/chordDetector";
 import { LoopEditor } from "../playback/loopEditor";
 import type { LocalAudioEngine } from "../playback/localAudioEngine";
 import type { MicrophoneInputSource } from "../playback/microphoneInputSource";
-import type { SongWorkspaceState, SourceType, TranscriptEntry } from "../domain/types";
+import type { YouTubePlayerAdapter } from "../playback/youtubePlayerAdapter";
+import type { PitchResult, SongWorkspaceState, SourceType, TranscriptEntry } from "../domain/types";
 import { validateMemoText, type ValidationResult } from "../logic/validation";
 import { loadSongState, saveSongState } from "../logic/localStorageAdapter";
 import { NoteTranscriptLogger } from "../logic/noteTranscriptLogger";
 import { formatPosition, primaryPositionForFrequency } from "../logic/bassPosition";
-import type { PitchResult } from "../domain/types";
 
 // Caps unbounded growth over a long practice session; oldest entries drop off.
 const MAX_TRANSCRIPT_ENTRIES = 500;
@@ -22,11 +23,19 @@ export interface SongWorkspaceParams {
   source: PlaybackSource;
 }
 
+// Anything that exposes the general + bass-filtered analyser pair — LocalAudioEngine,
+// MicrophoneInputSource, and YouTubePlayerAdapter (once enableAnalysisCapture() succeeds).
+interface AnalysisCapableSource {
+  getAnalyserNode(): AnalyserNode;
+  getPitchAnalyserNode(): AnalyserNode;
+}
+
 // SongWorkspace (see components.md). Aggregates one song's playback source, the
-// Local-only processors (EQ/TimeStretch/Pitch/Waveform — null for YouTube sources), the
-// LoopEditor, and the memo text. Persistence is local-only (browser storage, keyed by songKey) —
-// there is no account/login or cross-device sync (see aidlc-docs project decision: login-less
-// scope reduction).
+// EQ/TimeStretch/Pitch/Waveform/Chord processors (available whenever raw audio is reachable —
+// always for local/mic, only after opt-in tab-audio capture for YouTube), the LoopEditor, and
+// the memo text. Persistence is local-only (browser storage, keyed by songKey) — there is no
+// account/login or cross-device sync (see aidlc-docs project decision: login-less scope
+// reduction).
 export class SongWorkspace {
   readonly songKey: string;
   readonly sourceType: SourceType;
@@ -34,9 +43,10 @@ export class SongWorkspace {
   readonly loopEditor = new LoopEditor();
   readonly eq: BassEqProcessor | null;
   readonly timeStretch: TimeStretchProcessor | null;
-  readonly pitchDetector: PitchDetector | null;
-  readonly waveform: WaveformVisualizer | null;
-  private readonly analyserNode: AnalyserNode | null;
+  pitchDetector: PitchDetector | null = null;
+  waveform: WaveformVisualizer | null = null;
+  chordDetector: ChordDetector | null = null;
+  private analyserNode: AnalyserNode | null = null;
   private readonly transcriptLogger: NoteTranscriptLogger;
 
   private memoText = "";
@@ -70,30 +80,43 @@ export class SongWorkspace {
       this.eq.attach(engine);
       this.timeStretch = new TimeStretchProcessor();
       this.timeStretch.attach(engine);
-      this.analyserNode = engine.getAnalyserNode();
-      // Pitch detection uses its own steeply-filtered analyser (see localAudioEngine.ts), not
-      // the general one used for waveform/output — a full mix swamps monophonic detection.
-      this.pitchDetector = new PitchDetector();
-      this.pitchDetector.attach(engine.getPitchAnalyserNode());
-      this.waveform = new WaveformVisualizer();
+      this.attachAnalysis(engine);
     } else if (sourceType === "mic") {
       // No transport to control (no speed change, no loop) — see capabilities.ts — but raw
-      // audio is available, so EQ/pitch/waveform work the same way as for local files.
+      // audio is available, so EQ/pitch/waveform/chord work the same way as for local files.
       const mic = source as MicrophoneInputSource;
       this.eq = new BassEqProcessor();
       this.eq.attach(mic);
       this.timeStretch = null;
-      this.analyserNode = mic.getAnalyserNode();
-      this.pitchDetector = new PitchDetector();
-      this.pitchDetector.attach(mic.getPitchAnalyserNode());
-      this.waveform = new WaveformVisualizer();
+      this.attachAnalysis(mic);
     } else {
+      // "youtube": no raw-audio access until the user opts into tab-audio capture (see
+      // enableYoutubeAnalysis()) — see capabilities.ts for why EQ never becomes available even
+      // then.
       this.eq = null;
       this.timeStretch = null;
-      this.pitchDetector = null;
-      this.waveform = null;
-      this.analyserNode = null;
     }
+  }
+
+  private attachAnalysis(engine: AnalysisCapableSource): void {
+    this.analyserNode = engine.getAnalyserNode();
+    // Pitch/chord detection use their own analysers (see localAudioEngine.ts) — pitch gets a
+    // steeply-filtered one (a full mix swamps monophonic detection), chord detection reads the
+    // general one (it needs the harmony instruments, not just the bass fundamental).
+    this.pitchDetector = new PitchDetector();
+    this.pitchDetector.attach(engine.getPitchAnalyserNode());
+    this.chordDetector = new ChordDetector();
+    this.chordDetector.attach(this.analyserNode);
+    this.waveform = new WaveformVisualizer();
+  }
+
+  // Opt-in tab-audio capture for a YouTube source — see youtubePlayerAdapter.ts. No-op (resolves
+  // immediately) for non-YouTube sources, which already have analysis attached at construction.
+  async enableYoutubeAnalysis(): Promise<void> {
+    if (this.sourceType !== "youtube") return;
+    const adapter = this.source as YouTubePlayerAdapter;
+    await adapter.enableAnalysisCapture();
+    this.attachAnalysis(adapter);
   }
 
   getAnalyserNode(): AnalyserNode | null {
@@ -166,6 +189,7 @@ export class SongWorkspace {
   dispose(): void {
     this.waveform?.detach();
     this.pitchDetector?.stop();
+    this.chordDetector?.stop();
     this.source.dispose();
   }
 }

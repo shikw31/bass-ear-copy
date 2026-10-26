@@ -1,10 +1,11 @@
 import type { PitchResult } from "../domain/types";
 
-// Debounces the live pitch-detector stream (ticking ~15Hz) into "note changed and held" events,
-// so a transcript entry is logged once per played note instead of once per detection tick.
-// Requires the same note to repeat STABILITY_TICKS times (~200ms at 15Hz) before logging it,
-// and won't log the same note twice in a row (sustained notes don't spam the log).
-const STABILITY_TICKS = 3;
+// Debounces the live pitch-detector stream (ticking ~30Hz — see pitchDetector.ts) into "note
+// changed and held" events, so a transcript entry is logged once per played note instead of once
+// per detection tick. Requires the same note to repeat STABILITY_TICKS times (~67ms at 30Hz —
+// lowered from a ~200ms window after real playing showed fast passages were being missed
+// entirely) before logging it, and won't log the same note twice in a row.
+const STABILITY_TICKS = 2;
 
 export class NoteTranscriptLogger {
   private lastLoggedNote: string | null = null;

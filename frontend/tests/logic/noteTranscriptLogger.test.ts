@@ -8,12 +8,11 @@ function detected(noteName: string, frequencyHz: number): PitchResult {
 
 const UNDETECTED: PitchResult = { noteName: null, frequencyHz: null, confidence: 0, detected: false };
 
-describe("NoteTranscriptLogger (debounces the ~15Hz detection stream into note-held events)", () => {
-  it("does not log until the same note has been seen 3 times in a row", () => {
+describe("NoteTranscriptLogger (debounces the ~30Hz detection stream into note-held events)", () => {
+  it("does not log until the same note has been seen 2 times in a row (~67ms at 30Hz)", () => {
     const onNoteHeld = vi.fn();
     const logger = new NoteTranscriptLogger(onNoteHeld);
 
-    logger.observe(detected("E2", 82.41));
     logger.observe(detected("E2", 82.41));
     expect(onNoteHeld).not.toHaveBeenCalled();
 
@@ -37,8 +36,6 @@ describe("NoteTranscriptLogger (debounces the ~15Hz detection stream into note-h
 
     logger.observe(detected("E2", 82.41));
     logger.observe(detected("E2", 82.41));
-    logger.observe(detected("E2", 82.41));
-    logger.observe(detected("A2", 110));
     logger.observe(detected("A2", 110));
     logger.observe(detected("A2", 110));
 
@@ -51,9 +48,7 @@ describe("NoteTranscriptLogger (debounces the ~15Hz detection stream into note-h
     const logger = new NoteTranscriptLogger(onNoteHeld);
 
     logger.observe(detected("E2", 82.41));
-    logger.observe(detected("E2", 82.41));
     logger.observe(UNDETECTED);
-    logger.observe(detected("E2", 82.41));
     logger.observe(detected("E2", 82.41));
     expect(onNoteHeld).not.toHaveBeenCalled();
 
@@ -66,11 +61,9 @@ describe("NoteTranscriptLogger (debounces the ~15Hz detection stream into note-h
     const logger = new NoteTranscriptLogger(onNoteHeld);
     logger.observe(detected("E2", 82.41));
     logger.observe(detected("E2", 82.41));
-    logger.observe(detected("E2", 82.41));
     expect(onNoteHeld).toHaveBeenCalledOnce();
 
     logger.reset();
-    logger.observe(detected("E2", 82.41));
     logger.observe(detected("E2", 82.41));
     logger.observe(detected("E2", 82.41));
     expect(onNoteHeld).toHaveBeenCalledTimes(2);

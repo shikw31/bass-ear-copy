@@ -3,7 +3,9 @@ import type { PitchResult } from "../domain/types";
 import { toPitchResult } from "../logic/pitchMapping";
 import { startThrottledLoop } from "./audioAnalysisLoop";
 
-const TARGET_HZ = 15; // within the 10-20Hz NFR target
+// Raised from 15Hz after real playing showed notes often held for well under 200ms (fast
+// passages) — see noteTranscriptLogger.ts's stability window, which depends on this rate.
+const TARGET_HZ = 30;
 
 // PitchDetector (see components.md). Delegates the actual frequency estimation (including
 // octave-error handling) to pitchy's McLeod Pitch Method implementation — see

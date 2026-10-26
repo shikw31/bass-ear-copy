@@ -45,14 +45,16 @@ export class LocalAudioEngine implements PlaybackSource {
     // bass, and monophonic pitch detection (pitchy) gets swamped by that if it sees the whole
     // spectrum. A steep lowpass isolates the bass-ish band before analysis, separately from the
     // gentle, user-controlled EQ (which shapes what you *hear*, not what the detector sees).
-    // fftSize 4096 (vs. 2048 for the waveform) gives ~93ms of signal at 44.1kHz — comfortably
-    // more than one full period even at the bottom of the bass band (~41Hz ≈ 24ms/cycle).
+    // fftSize 2048 gives ~46ms of signal at 44.1kHz — a little under 2 full periods even at the
+    // bottom of the bass band (~41Hz ≈ 24ms/cycle), which is enough for pitchy's MPM algorithm.
+    // (A larger window was tried first but smeared fast passages — real playing showed notes
+    // well under 200ms, so time resolution matters more here than a bigger safety margin.)
     const pitchFilterNode = this.audioContext.createBiquadFilter();
     pitchFilterNode.type = "lowpass";
     pitchFilterNode.frequency.value = 250;
     pitchFilterNode.Q.value = 1;
     this.pitchAnalyserNode = this.audioContext.createAnalyser();
-    this.pitchAnalyserNode.fftSize = 4096;
+    this.pitchAnalyserNode.fftSize = 2048;
 
     sourceNode.connect(this.eqFilterNode);
     this.eqFilterNode.connect(this.analyserNode);

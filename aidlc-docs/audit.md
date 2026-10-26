@@ -465,3 +465,19 @@
 **Context**: Feature complete, ready to commit
 
 ---
+
+## Real Playing Feedback + Scope Decision on Chord Detection
+**Timestamp**: 2026-10-26T11:50:16Z
+**User Input**: "割とちゃんと音拾えてる！けどマイク入力だと速度調整ができないね。コードもちゃんと取れないし。YouTubeからもできないかな？流した物自体は再生できてるじゃん。" Then mid-turn interjection: "あと200秒も音が安定することなくない？" (questioning whether notes are ever stable for the full ~200ms stability window)
+**AI Response**: "Confirmed mic-input speed limitation is inherent (no control over an external device). Clarified chord detection was never actually built yet (previously deferred as 'reference only, maybe later') — asked whether to build it now. Separately, re-examined the YouTube-audio-inaccessible conclusion: the earlier 'mute to replace' dead-end only applies when trying to change what's heard (EQ) — pure *analysis* (pitch/waveform/chord) doesn't need to touch the output at all, so tab-audio capture via getDisplayMedia works for analysis without the mute paradox. Committed to building this. On the timing interjection: agreed immediately — at 15Hz with 3-tick stability the window was ~200ms, too slow for fast passages — raised pitch detection to 30Hz, lowered stability to 2 ticks (~67ms), and shortened the pitch analyser FFT window (4096->2048) to prioritize time resolution over low-end margin."
+**Context**: Scope negotiation + mid-turn course correction before implementation
+
+---
+
+## Implementation: Chord Detection, YouTube Tab-Audio Analysis, Faster Detection
+**Timestamp**: 2026-10-26T11:50:16Z
+**User Input**: Confirmed via AskUserQuestion: "コード解析もあわせて作る"
+**AI Response**: "Added src/logic/chordDetection.ts (chroma template matching: 12-bin pitch-class energy profile from FFT magnitudes, cosine similarity against 24 major/minor triad templates, confidence-thresholded) and src/playback/chordDetector.ts (polls the *general* unfiltered analyser at 8Hz, unlike PitchDetector's bass-filtered one, since chords need the harmony instruments). Added ChordDisplay.tsx, explicitly labeled '参考' (reference only) in the UI. Extended YouTubePlayerAdapter with enableAnalysisCapture() (getDisplayMedia tab-audio capture, video track discarded immediately, analysis-only — never connected to destination, so the tab's already-audible output isn't duplicated). Added PlaybackCapabilities.supportsChord and made capabilitiesFor() accept a youtubeAnalysisEnabled flag so YouTube's capabilities become dynamic (false until the user opts in via a new 'タブの音声を解析用に共有' button in PlayerScreen, true after). Refactored SongWorkspace's per-source-type construction into a shared attachAnalysis() helper reused by local/mic (at construction) and youtube (via new enableYoutubeAnalysis(), called post-construction once capture succeeds) — pitchDetector/waveform/chordDetector/analyserNode changed from readonly to mutable to support this. Also fixed the detection-responsiveness gap flagged mid-turn: TARGET_HZ 15->30 in pitchDetector.ts, STABILITY_TICKS 3->2 in noteTranscriptLogger.ts, pitch analyser fftSize 4096->2048 (both LocalAudioEngine and MicrophoneInputSource). Added 7 new chordDetection tests (Oracle comparison for C-major/A-minor triads, silence->undetected, chroma-from-magnitudes placement and band-filtering) and updated noteTranscriptLogger.test.ts for the new 2-tick stability count. Updated capabilities.test.ts, LoopControls.test.tsx, loopEditor.test.ts fixtures for the new supportsChord field. Verified: tsc clean, vitest 60/60 passing (13 files), build succeeds, npm audit 0 vulnerabilities. Browser-smoke-tested the local-file flow showing the new 'コード（参考） --' readout correctly in the Tuner/Scope panel; the real getDisplayMedia tab-capture flow and live chord/pitch accuracy on real audio couldn't be verified in the sandboxed headless browser (same known limitation as before) and need the user's own browser. Updated requirements.md Change Log and frontend/README.md."
+**Context**: Feature complete, ready to commit
+
+---
