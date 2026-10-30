@@ -59,9 +59,8 @@ export class SongWorkspace {
     this.source = source;
     this.loopEditor.attach(source);
 
-    // Auto-logs held notes as you play — see noteTranscriptLogger.ts. Saves immediately so a
-    // session isn't lost if the user never presses the manual Save button (the whole point was
-    // that typing along is too fast — see requirements.md Change Log).
+    // Auto-logs held notes as you play — see noteTranscriptLogger.ts. Kept in memory only (not
+    // persisted to browser storage) — see TranscriptEntry in domain/types.ts.
     this.transcriptLogger = new NoteTranscriptLogger((noteName, frequencyHz) => {
       const position = primaryPositionForFrequency(frequencyHz);
       const entry: TranscriptEntry = {
@@ -70,8 +69,6 @@ export class SongWorkspace {
         position: position ? formatPosition(position) : "",
       };
       this.transcript = [...this.transcript, entry].slice(-MAX_TRANSCRIPT_ENTRIES);
-      this.updatedAt = Date.now();
-      saveSongState(this.exportState());
     });
 
     if (sourceType === "local") {
@@ -135,8 +132,6 @@ export class SongWorkspace {
   clearTranscript(): void {
     this.transcript = [];
     this.transcriptLogger.reset();
-    this.updatedAt = Date.now();
-    saveSongState(this.exportState());
   }
 
   getMemoText(): string {
@@ -158,7 +153,6 @@ export class SongWorkspace {
       songKey: this.songKey,
       loopPoints: points ? { a: points.a, b: points.b, enabled: true } : null,
       memo: this.memoText ? { text: this.memoText, updatedAt: this.updatedAt } : null,
-      transcript: this.transcript,
       updatedAt: this.updatedAt || Date.now(),
     };
   }
@@ -172,9 +166,8 @@ export class SongWorkspace {
     if (state.memo) {
       this.memoText = state.memo.text;
     }
-    // Older saved states (before this feature) have no transcript field.
-    this.transcript = state.transcript ?? [];
     this.updatedAt = state.updatedAt;
+    // transcript is intentionally not restored — see TranscriptEntry in domain/types.ts.
   }
 
   loadLocal(): void {

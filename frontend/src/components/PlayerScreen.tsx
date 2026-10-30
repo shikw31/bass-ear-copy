@@ -15,9 +15,10 @@ import { useState } from "react";
 interface Props {
   workspace: SongWorkspace;
   onError: (message: string) => void;
+  onBack: () => void;
 }
 
-export function PlayerScreen({ workspace, onError }: Props) {
+export function PlayerScreen({ workspace, onError, onBack }: Props) {
   const [saved, setSaved] = useState(false);
   const [memoVersion, setMemoVersion] = useState(0);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>(workspace.getTranscript());
@@ -93,6 +94,16 @@ export function PlayerScreen({ workspace, onError }: Props) {
 
   return (
     <div data-testid="player-screen" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <button
+        type="button"
+        className="btn"
+        data-testid="player-screen-back-button"
+        onClick={onBack}
+        style={{ alignSelf: "flex-start" }}
+      >
+        ← 最初の画面に戻る
+      </button>
+
       {isMic && (
         <div className="mic-hint" data-testid="player-screen-mic-hint">
           <span className="led led--red" aria-hidden="true" />

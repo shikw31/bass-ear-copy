@@ -25,6 +25,10 @@ export interface Memo {
 
 // Auto-logged from the live pitch detector (see logic/noteTranscriptLogger.ts) — the user asked
 // for notes to be recorded automatically because playing is too fast to type along to.
+// In-memory for the current session only — not part of SongWorkspaceState. A transcript is
+// effectively a note-by-note copy of a (likely copyrighted) song, so it isn't persisted to
+// browser storage and starts empty again on every reload/reopen (see requirements.md Change
+// Log). The "メモにコピー" action remains the way to keep anything from it.
 export interface TranscriptEntry {
   time: number;
   note: string;
@@ -35,7 +39,6 @@ export interface SongWorkspaceState {
   songKey: string;
   loopPoints: LoopPoints | null;
   memo: Memo | null;
-  transcript: TranscriptEntry[];
   updatedAt: number;
 }
 

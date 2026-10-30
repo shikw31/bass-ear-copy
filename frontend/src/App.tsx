@@ -32,6 +32,11 @@ export function App() {
     }
   }
 
+  function handleBackToInput() {
+    workspace?.dispose();
+    setWorkspace(null);
+  }
+
   return (
     <div className="rack" data-testid="app-root">
       <div className="rack__nameplate">
@@ -55,7 +60,9 @@ export function App() {
             onError={setErrorMessage}
           />
         )}
-        {workspace && <PlayerScreen workspace={workspace} onError={setErrorMessage} />}
+        {workspace && (
+          <PlayerScreen workspace={workspace} onError={setErrorMessage} onBack={handleBackToInput} />
+        )}
       </div>
       <ErrorToast message={errorMessage} onDismiss={() => setErrorMessage(null)} />
     </div>
